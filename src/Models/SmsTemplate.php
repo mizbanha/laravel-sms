@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Amid\Sms\Models;
 
+use Amid\Sms\Enums\RoutingStrategy;
+use Amid\Sms\Exceptions\InvalidRoutingConfiguration;
 use Amid\Sms\Templates\PlaceholderParser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -18,22 +20,51 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * ⚠️ `is_sensitive` IS a property of the wording, though: a login-code template
  * is sensitive at every gateway, on every send, for everybody. A caller may force
  * a single send to be sensitive as well, but nothing can turn this off.
+ *
+ * ⚠️ `routing_strategy` is a property of the logical message too, for a different
+ * reason: a one-time code and an order notification want different policies about
+ * where to start, and one global setting cannot express both. It decides SELECTION
+ * only - which gateway is offered the message first, and in what order the rest
+ * follow - and never failover, which is decided from what a provider actually
+ * says.
  */
 class SmsTemplate extends Model
 {
     protected $table = 'sms_templates';
 
-    protected $fillable = ['key', 'name', 'body', 'is_sensitive'];
+    protected $fillable = ['key', 'name', 'body', 'is_sensitive', 'routing_strategy'];
 
     protected $attributes = [
         'is_sensitive' => false,
+        // The behaviour the package had before routing strategies existed, so a
+        // template nobody has thought about routes exactly as it always did.
+        'routing_strategy' => RoutingStrategy::Priority->value,
     ];
 
     protected function casts(): array
     {
         return [
             'is_sensitive' => 'boolean',
+            'routing_strategy' => RoutingStrategy::class,
         ];
+    }
+
+    /**
+     * ⚠️ A named error rather than a raw ValueError, exactly as with a gateway's
+     * country policy: the enum cast would refuse an unknown value on its own, with
+     * a message about enum backing values that means nothing to whoever typed it.
+     * This says which three words are allowed. Case and surrounding space are
+     * forgiven; a misspelling is not, because the alternative is a template quietly
+     * routed by a policy nobody chose.
+     */
+    public function setRoutingStrategyAttribute(mixed $value): void
+    {
+        $strategy = $value instanceof RoutingStrategy
+            ? $value
+            : RoutingStrategy::tryFrom(strtolower(trim((string) $value)));
+
+        $this->attributes['routing_strategy'] = ($strategy
+            ?? throw InvalidRoutingConfiguration::unknownStrategy((string) $value))->value;
     }
 
     public function gatewayBindings(): HasMany

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Amid\Sms\Models;
 
 use Amid\Sms\Enums\DeliveryMode;
+use Amid\Sms\Exceptions\InvalidRoutingConfiguration;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -37,11 +38,13 @@ class SmsTemplateGateway extends Model
         'pattern_code',
         'parameter_map',
         'is_enabled',
+        'weight',
     ];
 
     protected $attributes = [
         'mode' => DeliveryMode::Text->value,
         'is_enabled' => true,
+        'weight' => self::DEFAULT_WEIGHT,
     ];
 
     protected function casts(): array
@@ -50,7 +53,48 @@ class SmsTemplateGateway extends Model
             'mode' => DeliveryMode::class,
             'parameter_map' => 'array',
             'is_enabled' => 'boolean',
+            'weight' => 'integer',
         ];
+    }
+
+    /**
+     * An equal share. A binding nobody has weighted takes the same traffic as
+     * every other, which is what round-robin would have done anyway.
+     */
+    public const DEFAULT_WEIGHT = 1;
+
+    /**
+     * ⚠️ An upper bound, not because anything here would break above it, but
+     * because a weight is a RATIO and nothing is expressed at 60000 that is not
+     * expressed at 6. What a five-digit weight actually indicates is somebody
+     * typing a phone number, a message count or a budget into the wrong field, and
+     * the resulting cycle - tens of thousands of consecutive messages down one
+     * gateway before the next is offered anything - looks exactly like routing
+     * being broken.
+     */
+    public const MAXIMUM_WEIGHT = 1000;
+
+    /**
+     * ⚠️ Validated on the way IN, like every other piece of routing configuration.
+     *
+     * Zero is the case worth refusing loudly. It is a binding an administrator has
+     * created, enabled and expects to see traffic on, and it would receive none -
+     * a gateway that looks configured, looks healthy, and is never called. A whole
+     * binding set of zeroes is worse still: a total of nothing to divide by.
+     */
+    public function setWeightAttribute(mixed $value): void
+    {
+        if (! is_numeric($value) || (float) $value !== floor((float) $value)) {
+            throw InvalidRoutingConfiguration::weight($value, self::MAXIMUM_WEIGHT);
+        }
+
+        $weight = (int) $value;
+
+        if ($weight < 1 || $weight > self::MAXIMUM_WEIGHT) {
+            throw InvalidRoutingConfiguration::weight($value, self::MAXIMUM_WEIGHT);
+        }
+
+        $this->attributes['weight'] = $weight;
     }
 
     public function template(): BelongsTo

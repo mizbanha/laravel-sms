@@ -110,9 +110,16 @@ return [
     | job at once.
     |
     | Null uses the default cache store. It must be a store that supports atomic
-    | locks - database, redis, memcached, dynamodb or array all do. The FILE store
-    | does not, and configuring it here will throw rather than silently allow
-    | duplicate sends.
+    | locks - database, redis, memcached and dynamodb all do, and are the ones to
+    | use, because their locks are shared by every process that sends.
+    |
+    | ⚠️ Corrected in M9, from evidence rather than from memory. This package
+    | previously said the `file` store could not lock at all and would throw. It
+    | can: Laravel's file store takes a real exclusive lock on a lock file, so it is
+    | atomic WITHIN ONE MACHINE. The remaining limitation is different and narrower
+    | - two application servers with their own filesystems do not see each other's
+    | locks - and `array` is per-process, which is enough for a test suite and
+    | nothing else. A store with no lock support at all is refused.
     |
     | The duration is a ceiling on one delivery attempt, not a timeout: it only has
     | to outlive the HTTP call below.
@@ -122,6 +129,47 @@ return [
     'lock' => [
         'store' => env('SMS_LOCK_STORE'),
         'seconds' => 120,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Routing state
+    |--------------------------------------------------------------------------
+    |
+    | Where the round-robin cursor lives.
+    |
+    | ⚠️ There is no strategy setting here, and that is deliberate. A routing
+    | strategy is a property of a logical message - a login code should start at
+    | the most reliable line every time, while order notifications are ordinary
+    | traffic worth spreading - so it lives on the template row, where an operator
+    | can change it at runtime. A config key would be a second source of truth for
+    | the same question, and the two would eventually disagree.
+    |
+    | Weights live on the template/gateway binding, for the same reason: how much
+    | of THIS message a gateway carries is a fact about the pairing.
+    |
+    | `store` is null by default, meaning the processing-lock store above. It must
+    | support atomic locks, and for this feature it must be one whose locks every
+    | sending process shares - database, redis, memcached or dynamodb. ⚠️ `array`
+    | locks within one process and `file` within one machine, so with either of
+    | them a second worker or a second server distributes its own cycle rather than
+    | joining yours: the messages still go out, but the shares are per process or
+    | per machine rather than global.
+    |
+    | ⚠️ On a store that cannot lock, round-robin does NOT quietly fall back to a
+    | counter in the process. Four workers with four counters all start at zero and
+    | all choose the same gateway, which looks exactly like working distribution and
+    | is not. The package logs an error naming this setting and routes by configured
+    | priority - a real strategy that needs no shared state - until it is fixed.
+    |
+    | `state_ttl` only has to outlive the quiet hours of a low-volume template. A
+    | cursor that expires costs one restarted cycle and nothing else.
+    |
+    */
+
+    'routing' => [
+        'store' => env('SMS_ROUTING_STORE'),
+        'state_ttl' => env('SMS_ROUTING_STATE_TTL', 86400),
     ],
 
     /*
@@ -152,10 +200,11 @@ return [
     | nobody has to find a "reset health" button before a fix takes effect.
     |
     | `store` is null by default, meaning the processing-lock store above. It must
-    | support atomic operations - database, redis, memcached, dynamodb or array all
-    | do. On a store that does not (the FILE store), the breaker logs an error and
-    | switches itself off rather than running a version of itself whose one-probe
-    | guarantee is not a guarantee. Messages still send.
+    | support atomic operations - see the note there about which stores do, and
+    | about the `file` store, whose locks are real but local to one machine. On a
+    | store with no lock support at all, the breaker logs an error and switches
+    | itself off rather than running a version of itself whose one-probe guarantee
+    | is not a guarantee. Messages still send.
     |
     */
 

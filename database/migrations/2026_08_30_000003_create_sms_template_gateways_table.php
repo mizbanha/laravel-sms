@@ -62,6 +62,26 @@ return new class extends Migration
 
             $table->boolean('is_enabled')->default(true);
 
+            /*
+             * This gateway's share of THIS message's traffic, when the template
+             * routes by weight.
+             *
+             * ⚠️ A ratio, never a percentage. 5, 3 and 2 give three gateways half,
+             * a third and a fifth of the primary selections; so do 50, 30 and 20.
+             * Nothing has to add up to a hundred, which means adding a fourth
+             * gateway does not require editing the other three.
+             *
+             * ⚠️ On the BINDING rather than on the gateway, because the question it
+             * answers is per logical message: an account with a good service line
+             * may be worth most of the one-time codes and none of the marketing.
+             * A weight on the gateway row could only ever express one answer for
+             * all traffic.
+             *
+             * Ignored entirely by the other two strategies. 1 is the default, so a
+             * binding nobody has thought about takes an equal share.
+             */
+            $table->unsignedSmallInteger('weight')->default(1);
+
             $table->timestamps();
 
             // One binding per pairing. Two would be two answers to the question

@@ -98,6 +98,38 @@ return new class extends Migration
              */
             $table->nullableMorphs('reference');
 
+            /*
+             * The gateway this message was routed to FIRST, recorded before the
+             * first provider call.
+             *
+             * ⚠️ Intent, not evidence. An attempt row says a provider was
+             * contacted; this column says only where the routing strategy pointed.
+             * The two can differ - the chosen gateway may have been circuit-open by
+             * the time it was reached - and when they do, the attempts are the
+             * truth about what happened.
+             *
+             * It exists because round-robin distributes NEW logical messages, and a
+             * queued job that Laravel releases and runs again is the same logical
+             * message. Without a record, the retry would take whatever slot the
+             * shared cursor had reached in the meantime, so ten unrelated messages
+             * could move this one from its first gateway to a completely different
+             * one between two runs of the same job - a routing decision made by
+             * other people's traffic. The retry reads this column instead, and
+             * takes no new slot.
+             *
+             * ⚠️ It does not freeze the candidate list. A gateway enabled since the
+             * first run still joins the chain behind this one, which is the M2
+             * behaviour and worth keeping: newly available infrastructure should be
+             * able to rescue a message that is still unsettled.
+             *
+             * Null for a message that never reached routing - suppressed by the
+             * master switch, or with no template left - and null on every message
+             * of a `priority` template, which needs no such record because its
+             * order is the same on every run by construction.
+             */
+            $table->foreignId('routing_gateway_id')->nullable()
+                ->constrained('sms_gateways')->nullOnDelete();
+
             // When a gateway accepted it. Null for everything else, including
             // messages whose fate is unknown.
             $table->timestamp('sent_at')->nullable();

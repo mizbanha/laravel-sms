@@ -16,6 +16,7 @@ use Amid\Sms\Exceptions\InvalidParameterMap;
 use Amid\Sms\Exceptions\MissingVariables;
 use Amid\Sms\Gateways\GatewayCandidate;
 use Amid\Sms\Gateways\GatewayRouter;
+use Amid\Sms\Gateways\RoutingPlanner;
 use Amid\Sms\Health\CircuitBreaker;
 use Amid\Sms\Models\SmsAttempt;
 use Amid\Sms\Models\SmsMessage;
@@ -52,6 +53,7 @@ final class MessageDispatcher
         private readonly PhoneNormalizer $normalizer,
         private readonly TemplateRenderer $renderer,
         private readonly CircuitBreaker $breaker,
+        private readonly RoutingPlanner $planner,
     ) {}
 
     /**
@@ -106,6 +108,40 @@ final class MessageDispatcher
             return null;
         }
 
+        /*
+         * Which of them goes first, and in what order the rest follow.
+         *
+         * ⚠️ Ordering only. The planner returns a permutation of the list above and
+         * never a narrowed one, so nothing below this line behaves differently for
+         * a `round_robin` template than it does for a `priority` one: the chain is
+         * walked the same way, the breaker is consulted the same way, and every
+         * rule about when a message may move on is decided from what a provider
+         * actually said. A `priority` template does not even reach the cache.
+         *
+         * ⚠️ The message's own earlier decision is passed back in, so a released
+         * job resumes where it was pointed rather than taking whatever position the
+         * shared cursor has reached in the meantime. See sms_messages.
+         */
+        $plan = $this->planner->plan(
+            $template,
+            $candidates,
+            $message->routing_gateway_id === null ? null : (int) $message->routing_gateway_id,
+        );
+
+        $candidates = $plan->candidates;
+
+        if ($plan->primaryGatewayId !== null && (int) ($message->routing_gateway_id ?? 0) !== $plan->primaryGatewayId) {
+            /*
+             * Recorded as INTENT, before anything is called, and persisted by the
+             * transition on the next line rather than by a write of its own.
+             *
+             * ⚠️ It is not evidence that this gateway was contacted - the attempts
+             * are that, and they may well name a different one if this gateway's
+             * circuit had opened by the time the chain reached it.
+             */
+            $message->routing_gateway_id = $plan->primaryGatewayId;
+        }
+
         $message->transitionTo(MessageStatus::Sending);
 
         $result = null;
@@ -115,7 +151,7 @@ final class MessageDispatcher
         /*
          * The failover chain.
          *
-         * Each eligible gateway is called at most once, in the router's order. A
+         * Each eligible gateway is called at most once, in the planned order. A
          * gateway is never immediately retried inside this loop: a retry is a
          * decision for the next run, taken with a delay, not something to hammer
          * out here.

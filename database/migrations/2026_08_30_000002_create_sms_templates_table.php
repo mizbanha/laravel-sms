@@ -55,6 +55,31 @@ return new class extends Migration
              */
             $table->boolean('is_sensitive')->default(false);
 
+            /*
+             * Which gateway this logical message starts at: priority,
+             * round_robin or weighted_round_robin.
+             *
+             * ⚠️ A property of the MESSAGE, not of the installation, and that is
+             * the whole reason it is a column rather than a config key. A login
+             * code should start at the most reliable line every time; order
+             * notifications are ordinary traffic worth spreading across the
+             * accounts that are being paid for either way. One global setting
+             * cannot express both, and a config key would be a second source of
+             * truth for something an operator changes at runtime.
+             *
+             * ⚠️ Selection only. It decides where a message STARTS and in what
+             * order the rest are offered it. What happens once a gateway has
+             * answered is failover, it is decided from the provider's own answer,
+             * and no strategy here can weaken it.
+             *
+             * A string, not a native enum, for the same reason as `mode` above:
+             * adding a case stays a code change rather than a schema migration on
+             * every consumer, and the column behaves identically on SQLite and
+             * MySQL. `priority` is the default and is exactly the behaviour the
+             * package had before routing strategies existed.
+             */
+            $table->string('routing_strategy', 32)->default('priority');
+
             $table->timestamps();
         });
     }

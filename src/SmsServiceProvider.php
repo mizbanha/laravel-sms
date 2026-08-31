@@ -9,6 +9,7 @@ use Amid\Sms\Contracts\PhoneNormalizer;
 use Amid\Sms\Delivery\DeliveryTracker;
 use Amid\Sms\Gateways\GatewayRegistry;
 use Amid\Sms\Gateways\GatewayRouter;
+use Amid\Sms\Gateways\RoutingPlanner;
 use Amid\Sms\Health\CircuitBreaker;
 use Amid\Sms\Otp\OtpManager;
 use Amid\Sms\Otp\RandomOtpCodeGenerator;
@@ -56,6 +57,7 @@ class SmsServiceProvider extends ServiceProvider
         $this->app->singleton(CircuitBreaker::class);
 
         $this->app->singleton(GatewayRouter::class);
+        $this->app->singleton(RoutingPlanner::class);
         $this->app->singleton(TemplateRenderer::class);
         $this->app->singleton(ParameterMapper::class);
         $this->app->singleton(MessageDispatcher::class);

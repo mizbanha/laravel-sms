@@ -9,13 +9,19 @@ use Amid\Sms\Models\SmsTemplate;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Which gateways could carry this message, best first.
+ * Which gateways could carry this message, in configured priority order.
  *
- * Returns an ordered list rather than a single choice even though the current
- * sending path uses only the first of them. That is deliberate: failover is a
- * later milestone, and the difference between "this returns a list" and "this
- * returns one gateway" is the difference between adding failover as a loop and
- * rewriting the send path to accommodate it.
+ * Returns an ordered list rather than a single choice. That was deliberate before
+ * failover existed - the difference between "this returns a list" and "this returns
+ * one gateway" is the difference between adding failover as a loop and rewriting
+ * the send path - and it is what everything since has been built on.
+ *
+ * ⚠️ **Eligibility, never distribution.** This class answers a static question from
+ * the database, in one query, with no side effects and no cache: which gateways
+ * COULD carry this message. Which of them goes first is a separate question with a
+ * separate answer, and it lives in `RoutingPlanner`, because it needs shared state
+ * that a query builder has no business holding. Priority order is what this returns
+ * and what the planner starts from.
  *
  * A candidate has to pass five tests, all of them cheap and none of them
  * provider-specific:

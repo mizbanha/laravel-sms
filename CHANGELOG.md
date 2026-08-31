@@ -51,6 +51,13 @@ First public release candidate. Nothing has been tagged yet.
   skipped for a cooldown and then given exactly one probe, so a provider outage
   does not cost every message a timeout. Cache-only, and it can never rescue the
   message that tripped it.
+- **Routing strategies.** A template chooses how its messages pick a starting
+  gateway: `priority` (the default and the previous behaviour), `round_robin`, or
+  `weighted_round_robin` over per-binding weights that are ratios rather than
+  percentages. Deterministic, never random; the cursor is shared through the cache
+  so queue workers distribute together; and a gateway that is ineligible or
+  circuit-open takes no share. Selection only — every failover rule is unchanged,
+  and a queued retry keeps the gateway its message was first given.
 
 ### Notes
 
@@ -58,5 +65,8 @@ First public release candidate. Nothing has been tagged yet.
   five Iranian and international implementations are built from current official
   documentation and tested against faked responses.
 - Delivery is not exactly-once. See the Security section of the README.
+- Round-robin distribution needs a cache store whose locks every sending process
+  shares. On one that cannot lock, the package logs an error and routes by
+  configured priority rather than keeping a per-process counter.
 
 [Unreleased]: https://github.com/amidesfahani/laravel-sms

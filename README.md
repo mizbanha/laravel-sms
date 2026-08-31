@@ -3,9 +3,9 @@
 A provider-neutral SMS package for Laravel. Gateways, templates and per-gateway parameter mapping live in
 the database and are editable at runtime; providers are code.
 
-**Status: M7.** One templated message, routed to the gateways that serve its destination country,
-failed over across them in priority order, recorded as a message plus one attempt per handover,
-synchronously or through the queue, with a structured result. Drivers: Kavenegar, SMS.ir, IPPanel and
+**Status: M9.** One templated message, routed to the gateways that serve its destination country by one
+of three selection strategies, failed over across them, recorded as a message plus one attempt per
+handover, synchronously or through the queue, with a structured result. Drivers: Kavenegar, SMS.ir, IPPanel and
 Melipayamak (Iranian), Twilio (international), plus `log`, which writes to a log channel and contacts
 nobody. Sensitive messages and package-owned OTP are built, delivery status can be refreshed from Twilio
 and IPPanel, and a gateway that stops answering is skipped for a cooldown instead of costing every message
@@ -19,7 +19,8 @@ documentation and verified against faked responses. Treat a first production sen
 PHP 8.3+, Laravel 13+. An `APP_KEY` is required — gateway credentials are encrypted at rest.
 
 The cache store used for the processing lock must support atomic locks: `database`, `redis`, `memcached`,
-`dynamodb` or `array`. The `file` store does not and will throw rather than silently permit duplicate sends.
+`dynamodb`. The `array` store works within one process only, and the `file` store within one machine only;
+a store with no lock support at all is refused rather than silently permitted to allow duplicate sends.
 
 ## Install
 
@@ -336,9 +337,114 @@ to decide what happens next:
 processed — so the message settles as `unknown` and is **never** automatically re-sent. Assuming otherwise
 is how one order confirmation becomes two.
 
+## Routing strategies
+
+Which gateway does a message **start** at? That is a separate question from what happens once that
+gateway has answered, and the two are configured separately.
+
+| Strategy | What it does |
+|---|---|
+| `priority` | the configured order, every time. **The default**, and the behaviour of every earlier version |
+| `round_robin` | each new message starts one gateway further along, wrapping at the end |
+| `weighted_round_robin` | the same, over unequal shares |
+
+**Strategy is a property of the logical message**, on the template row — not a global setting, because
+different messages want different policies:
+
+```php
+use Amid\Sms\Enums\RoutingStrategy;
+use Amid\Sms\Models\SmsTemplate;
+
+// A login code should start at the most reliable line, every single time.
+SmsTemplate::where('key', 'login-otp')->first()
+    ->update(['routing_strategy' => RoutingStrategy::Priority]);
+
+// Order notifications are ordinary traffic worth spreading over the accounts
+// you are paying for either way.
+SmsTemplate::where('key', 'order-created')->first()
+    ->update(['routing_strategy' => RoutingStrategy::WeightedRoundRobin]);
+```
+
+**Weights are a property of the template/gateway binding**, for the same reason: how much of *this*
+message a gateway carries is a fact about the pairing, not about the gateway.
+
+```php
+$template->gatewayBindings()->where('sms_gateway_id', $kavenegar->id)->update(['weight' => 5]);
+$template->gatewayBindings()->where('sms_gateway_id', $smsir->id)->update(['weight' => 3]);
+$template->gatewayBindings()->where('sms_gateway_id', $ippanel->id)->update(['weight' => 2]);
+```
+
+⚠️ **Weights are ratios, not percentages.** `5, 3, 2` gives half, a third and a fifth of the primary
+selections — and so does `50, 30, 20`. Nothing has to add up to a hundred, so adding a fourth gateway
+never means editing the other three. The default is `1`, an equal share; the range is 1 to 1000.
+
+⚠️ **Weighted round-robin is deterministic, not random.** `5, 3, 2` produces a repeating cycle of ten:
+
+```text
+A A A A A B B B C C   A A A A A B B B C C   …
+```
+
+Over any complete cycle the counts are exactly five, three and two. A weighted *random* draw would give
+that ratio only in the long run, and "eventually, on average" is not something you can hold a provider
+contract to or reproduce from a bug report.
+
+### Routing is not failover
+
+A strategy decides an **order**. Everything below in *Failover* still applies unchanged — most
+importantly, an uncertain result still stops a message permanently and never moves it to another gateway.
+Rotating a candidate list is never a reason to hand one person's message to a second provider.
+
+After the primary is chosen, the rest of the chain is deterministic:
+
+- `round_robin` **rotates**: with A, B, C and B leading, the chain is B → C → A.
+- `weighted_round_robin` does **not** rotate: the primary leads, then the rest in configured priority
+  order. Weights govern primary selection; who you fail over *to* is what priority is for.
+
+### What gets a share, and what does not
+
+Only gateways that could actually carry the message take part: enabled gateway, enabled and complete
+binding, compatible capability, and configured for the destination's country. A gateway excluded by any
+of those has **no turn at all** — the cycle is simply shorter — so it never costs a message.
+
+⚠️ The **circuit breaker** narrows it further. A gateway whose circuit is open takes no share, because a
+share allocated to a gateway this application already knows it will not call is a share of the traffic
+that silently goes nowhere. A **half-open** gateway does take part: it is owed one recovery probe, and the
+ordinary rotation is how it gets one. When the usable set changes, the cycle simply starts fresh —
+fairness is measured among the gateways that can receive traffic right now.
+
+A routing skip is never an attempt: no `sms_attempts` row, no sequence number, no provider error.
+
+### Distribution needs a shared cache
+
+⚠️ **Round-robin state lives in the cache, and the store has to be shared by every process that sends.**
+A counter in the process would distribute nothing: four queue workers are four processes, four counters
+starting at zero, and four copies of the same first gateway. The cursor is read, incremented and written
+inside a Laravel cache lock, so two workers hitting it in the same millisecond get different slots.
+
+Use `database`, `redis`, `memcached` or `dynamodb` (`sms.routing.store`, defaulting to the processing-lock
+store). `array` is per-process and `file` is per-machine — with either, a second worker or a second server
+distributes its own cycle rather than joining yours. On a store with no lock support at all, the package
+**logs an error and routes by configured priority** rather than pretending: a process-local counter that
+called itself round-robin would look exactly like working distribution and would not be any.
+
+`priority` needs none of this and never touches the cache.
+
+### Queued messages keep the gateway they were given
+
+A job Laravel released and ran again is the *same* logical message, so it is not re-distributed: the
+gateway it was first pointed at is recorded on `sms_messages.routing_gateway_id` and leads the chain on
+every later run. Without that, ten unrelated messages moving the shared cursor could move this one to a
+different gateway between two runs of the same job.
+
+That records an **intent**, not evidence — the attempts are the evidence of what was actually contacted —
+and it does not freeze the candidate list: a gateway you enable between two runs still joins the chain and
+can still rescue the message.
+
+A message suppressed by the master switch contacted nobody, so it advances nothing.
+
 ## Failover
 
-A message is offered to each eligible gateway in priority order until one takes it. Every handover is one
+A message is offered to each eligible gateway in the planned order until one takes it. Every handover is one
 `sms_attempt` row, in sequence, so the history of a message survives its outcome.
 
 The chain stops at the first of these:
@@ -616,10 +722,13 @@ write that follows the HTTP call, and makes every *knowable* ambiguity terminal 
 
 ## Operational limitations
 
-- **The cache store must support atomic locks** — `database`, `redis`, `memcached`, `dynamodb` or
-  `array`. The `file` store does not: the send lock throws rather than permit duplicate sends, and the
-  circuit breaker logs an error and switches itself off rather than run a version of itself whose
-  single-probe guarantee is not a guarantee. Messages still send in that case.
+- **The cache store must support atomic locks** — `database`, `redis`, `memcached` or `dynamodb`, whose
+  locks every sending process shares. ⚠️ `array` locks within one process and `file` within one machine,
+  so on more than one application server neither coordinates anything: the send lock stops protecting
+  against duplicate sends across servers, and round-robin distributes per server rather than globally.
+  On a store with no lock support at all, the send lock throws rather than permit duplicate sends, and
+  the circuit breaker and round-robin each say so in the log and switch themselves off — messages still
+  send, by configured priority.
 - **Delivery refresh is explicit.** `Sms::refreshDelivery()` is the whole mechanism. Core schedules
   nothing, polls nothing and has no webhook route; deciding which messages are worth asking about, and how
   often, is a policy question with real cost and provider rate limits attached, and it belongs above this

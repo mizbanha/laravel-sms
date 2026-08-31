@@ -86,6 +86,32 @@ final class CircuitBreaker
     }
 
     /**
+     * Would this gateway be allowed right now, WITHOUT claiming anything?
+     *
+     * ⚠️ The read-only sibling of `allows()`, and the difference is the whole
+     * reason it exists. `allows()` reserves the half-open probe as a side effect,
+     * which is correct immediately before a call and wrong anywhere else: a routing
+     * strategy that asked `allows()` while merely deciding an ORDER would consume
+     * the one probe a recovering gateway is owed and then, quite possibly, never
+     * call it - leaving the gateway half-open, unprobed, and unreachable until the
+     * reservation expired.
+     *
+     * So the planner asks this instead. An open gateway is excluded from the
+     * distribution, because a share allocated to a gateway this application already
+     * knows it will not call is a share of the traffic that silently goes nowhere.
+     * A half-open one is INCLUDED: it is owed a probe, and the ordinary routing
+     * order is how it gets one.
+     *
+     * ⚠️ It narrows nothing on its own. Selection still goes through `allows()` at
+     * the moment of the call, so nothing here can bypass the breaker, and a circuit
+     * that opens between the plan and the call still stops the call.
+     */
+    public function available(SmsGateway $gateway): bool
+    {
+        return $this->status($gateway)->state !== CircuitState::Open;
+    }
+
+    /**
      * Record what a gateway just did, for the benefit of the NEXT message.
      *
      * ⚠️ **This never affects the message that produced the result.** The
