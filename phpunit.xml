@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         defaultTestSuite="Package">
+    <!--
+        Two suites, and the default is deliberately the one that talks to nobody.
+
+        `Package` is everything: unit and feature tests, every provider faked, no
+        network. It is what `vendor/bin/pest` runs.
+
+        `Integration` holds the Twilio Test Credentials harness, which calls the
+        REAL Twilio REST API. It is excluded from the default run so it can never
+        execute by accident, and it skips itself anyway unless
+        SMS_TWILIO_TEST_ACCOUNT_SID and SMS_TWILIO_TEST_AUTH_TOKEN are present.
+        Run it deliberately, with test credentials, by passing the Integration
+        testsuite name to pest. Otherwise it does not run at all.
+    -->
+    <testsuites>
+        <testsuite name="Package">
+            <directory>tests/Unit</directory>
+            <directory>tests/Feature</directory>
+        </testsuite>
+        <testsuite name="Integration">
+            <directory>tests/Integration</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+    </source>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="DB_CONNECTION" value="testing"/>
+    </php>
+</phpunit>

@@ -1,0 +1,55 @@
+name: tests
+
+# ⚠️ This workflow never sends an SMS and never needs a secret.
+#
+# The default test suite fakes every provider, and the one suite that talks to a
+# real API — the Twilio Test Credentials harness in tests/Integration — is
+# excluded from it by phpunit.xml and skips itself when its two environment
+# variables are absent. Neither is set here, deliberately: a package's CI should
+# not hold provider credentials, and a pull request from a fork must never be
+# able to reach one.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Only what composer.json genuinely supports and what has actually been
+        # run. The package requires php ^8.3 and illuminate/* ^13.0; PHP 8.4 is
+        # included because the constraint admits it, and nothing broader is
+        # claimed until it has been exercised.
+        php: ['8.3', '8.4']
+
+    name: PHP ${{ matrix.php }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          # intl and mbstring are what libphonenumber and the renderer need.
+          extensions: mbstring, intl, pdo_sqlite
+          coverage: none
+
+      # No lock file is committed - this is a library, so resolution against the
+      # current constraints is the thing worth testing.
+      - name: Install dependencies
+        run: composer update --prefer-dist --no-interaction --no-progress
+
+      - name: Validate composer.json
+        run: composer validate --strict
+
+      - name: Run the test suite
+        run: vendor/bin/pest
