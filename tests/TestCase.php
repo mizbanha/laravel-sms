@@ -9,6 +9,7 @@ use Amid\Sms\Models\SmsGateway;
 use Amid\Sms\Models\SmsTemplate;
 use Amid\Sms\Models\SmsTemplateGateway;
 use Amid\Sms\SmsServiceProvider;
+use Illuminate\Foundation\Console\VendorPublishCommand;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchestra\Testbench\TestCase as Orchestra;
 
@@ -62,6 +63,21 @@ abstract class TestCase extends Orchestra
         if (self::usingCustomTables()) {
             $app['config']->set('laravel-sms.tables', self::customTables());
         }
+    }
+
+    /**
+     * Exercise the same installation contract as a consuming application: the
+     * suite migrates published application copies, never a runtime vendor path.
+     */
+    protected function defineDatabaseMigrations(): void
+    {
+        VendorPublishCommand::dontUpdateMigrationDates();
+
+        $this->artisan('vendor:publish', [
+            '--provider' => SmsServiceProvider::class,
+            '--tag' => 'laravel-sms-migrations',
+            '--force' => true,
+        ])->assertSuccessful();
     }
 
     /**
@@ -136,8 +152,8 @@ abstract class TestCase extends Orchestra
      * configuration a send needs.
      *
      * @param  list<array{provider?: string|null, variable: string}>|null  $parameterMap
-     *         written exactly as it is stored: an ordered list, because that is
-     *         the representation under test
+     *                                                                                    written exactly as it is stored: an ordered list, because that is
+     *                                                                                    the representation under test
      */
     protected function configureGateway(
         string $driver = 'log',

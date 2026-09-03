@@ -101,8 +101,6 @@ class SmsServiceProvider extends ServiceProvider
          */
         TableNames::validate();
 
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
-
         if ($this->app->runningInConsole()) {
             /*
              * ⚠️ The tags carry the package's name for the same reason the config
@@ -115,7 +113,7 @@ class SmsServiceProvider extends ServiceProvider
                 __DIR__.'/../config/laravel-sms.php' => $this->app->configPath('laravel-sms.php'),
             ], 'laravel-sms-config');
 
-            $this->publishes([
+            $this->publishesMigrations([
                 __DIR__.'/../database/migrations' => $this->app->databasePath('migrations'),
             ], 'laravel-sms-migrations');
         }

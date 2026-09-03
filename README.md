@@ -27,17 +27,24 @@ a store with no lock support at all is refused rather than silently permitted to
 ```bash
 composer require amidesfahani/laravel-sms
 php artisan vendor:publish --tag=laravel-sms-config
+php artisan vendor:publish --tag=laravel-sms-migrations
 php artisan migrate
 ```
 
-That is the whole installation. The service provider is discovered automatically, and **the five package
-migrations are loaded from the package** — `php artisan migrate` runs them where they are, and they stay
-in step with the package when it is upgraded. Publishing them is offered
-(`--tag=laravel-sms-migrations`) for the one case that needs it: a project that must edit the schema, which then
-owns the copies. Do one or the other, not both.
+That is the whole installation. The service provider is discovered automatically. The config and all five
+migrations must be published into the application before migrating; Core does not load migrations directly
+from `vendor`. The application therefore has one authoritative migration path and owns the published files.
 
-The config file is the opposite way round: publish it, because it is yours to edit. Everything unset in
-your copy falls back to the package's defaults.
+To publish both groups in one command instead, use:
+
+```bash
+php artisan vendor:publish --provider="Amid\Sms\SmsServiceProvider"
+```
+
+Do not combine published migrations with a `migrate --path=vendor/...` workflow.
+
+Publish the config because it is yours to edit. Everything unset in your copy falls back to the package's
+defaults.
 
 ⚠️ **The file is `config/laravel-sms.php`, and the key is `config('laravel-sms.*')` — deliberately not
 `config/sms.php`.** `sms` is too generic a name for a package to take, and an application that already has
