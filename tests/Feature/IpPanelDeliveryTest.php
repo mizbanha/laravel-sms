@@ -13,6 +13,7 @@ use Amid\Sms\Facades\Otp;
 use Amid\Sms\Facades\Sms;
 use Amid\Sms\Gateways\GatewayConfig;
 use Amid\Sms\Phone\PhoneNumber;
+use Amid\Sms\Support\TableNames;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
@@ -227,7 +228,7 @@ it('records a delivered verdict through the pipeline without storing the report'
         ->and($attempt->provider_delivery_status)->toBe('2')
         ->and($message->fresh()->delivery_status)->toBe(DeliveryStatus::Delivered)
         // ⚠️ Nothing raw. Not the report envelope, not the row, not the token.
-        ->and(json_encode(DB::table('sms_attempts')->where('id', $attempt->getKey())->first()))
+        ->and(json_encode(DB::table(TableNames::attempts())->where('id', $attempt->getKey())->first()))
         ->not->toContain('is_readable')
         ->not->toContain(IPPANEL_TOKEN);
 });
@@ -289,8 +290,8 @@ it('never brings an OTP back into the database through a delivery report', funct
 
     // And the code appears nowhere in the database at all.
     $rows = json_encode([
-        DB::table('sms_messages')->where('id', $message->getKey())->first(),
-        DB::table('sms_attempts')->where('id', $attempt->getKey())->first(),
+        DB::table(TableNames::messages())->where('id', $message->getKey())->first(),
+        DB::table(TableNames::attempts())->where('id', $attempt->getKey())->first(),
     ]);
 
     expect($rows)->not->toContain('482193')

@@ -286,9 +286,9 @@ it('never lets a probe reservation expire while its own request is still running
      * admit a second probe, and produce exactly the pile-up on a recovering
      * provider that half-open exists to prevent.
      */
-    config()->set('sms.circuit_breaker.probe_ttl', 1);
-    config()->set('sms.http.timeout', 15);
-    config()->set('sms.http.connect_timeout', 5);
+    config()->set('laravel-sms.circuit_breaker.probe_ttl', 1);
+    config()->set('laravel-sms.http.timeout', 15);
+    config()->set('laravel-sms.http.connect_timeout', 5);
 
     $gateway = circuitGateway();
     tripCircuit($gateway);
@@ -446,7 +446,7 @@ it('keeps nothing secret or personal in a cache key', function () {
 });
 
 it('does nothing at all when it is switched off', function () {
-    config()->set('sms.circuit_breaker.enabled', false);
+    config()->set('laravel-sms.circuit_breaker.enabled', false);
 
     $gateway = circuitGateway();
     tripCircuit($gateway);
@@ -459,7 +459,7 @@ it('refuses a configuration that cannot mean anything', function (string $settin
     // A threshold of zero opens a circuit that was never closed; a window or
     // cooldown of zero is a breaker that remembers nothing. Both are worth naming
     // at the moment somebody makes the mistake.
-    config()->set('sms.circuit_breaker.'.$setting, 0);
+    config()->set('laravel-sms.circuit_breaker.'.$setting, 0);
 
     tripCircuit(circuitGateway());
 })->with(['failure_threshold', 'failure_window', 'cooldown'])->throws(SmsException::class);

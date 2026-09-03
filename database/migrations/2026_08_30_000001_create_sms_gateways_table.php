@@ -1,5 +1,6 @@
 <?php
 
+use Amid\Sms\Support\TableNames;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -17,7 +18,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('sms_gateways', function (Blueprint $table) {
+        Schema::create(TableNames::gateways(), function (Blueprint $table) {
             $table->id();
 
             // How everything else refers to this gateway, e.g. kavenegar-main.
@@ -28,7 +29,7 @@ return new class extends Migration
             $table->string('label');
 
             /*
-             * Which driver carries it - a key of config('sms.drivers'), not a class
+             * Which driver carries it - a key of config('laravel-sms.drivers'), not a class
              * name. A class name in the database is a class name that gets renamed
              * by a refactor and silently stops resolving.
              */
@@ -95,6 +96,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('sms_gateways');
+        Schema::dropIfExists(TableNames::gateways());
     }
 };

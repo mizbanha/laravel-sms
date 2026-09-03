@@ -9,6 +9,7 @@ use Amid\Sms\Models\SmsAttempt;
 use Amid\Sms\Models\SmsGateway;
 use Amid\Sms\Models\SmsTemplate;
 use Amid\Sms\Models\SmsTemplateGateway;
+use Amid\Sms\Support\TableNames;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
@@ -339,7 +340,7 @@ it('persists no part of the raw delivery report', function () {
 
     Sms::refreshDelivery($message);
 
-    $row = json_encode(DB::table('sms_attempts')->where('sms_message_id', $message->getKey())->first());
+    $row = json_encode(DB::table(TableNames::attempts())->where('sms_message_id', $message->getKey())->first());
 
     expect($row)->not->toContain('your order is ready')
         ->not->toContain('-0.0075')

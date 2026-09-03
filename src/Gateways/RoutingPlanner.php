@@ -289,7 +289,7 @@ final class RoutingPlanner
 
         if (! $store->getStore() instanceof LockProvider) {
             $this->warn(
-                'the configured cache store does not support atomic locks. Point sms.routing.store at a '
+                'the configured cache store does not support atomic locks. Point laravel-sms.routing.store at a '
                 .'store that does (database, redis, memcached or dynamodb), or set the template back to '
                 .'the priority strategy, which needs no shared state.'
             );
@@ -366,7 +366,7 @@ final class RoutingPlanner
 
     private function store(): Repository
     {
-        return Cache::store(config('sms.routing.store') ?? config('sms.lock.store'));
+        return Cache::store(config('laravel-sms.routing.store') ?? config('laravel-sms.lock.store'));
     }
 
     /**
@@ -378,7 +378,7 @@ final class RoutingPlanner
      */
     private function ttl(): int
     {
-        $ttl = (int) config('sms.routing.state_ttl', 86400);
+        $ttl = (int) config('laravel-sms.routing.state_ttl', 86400);
 
         return $ttl > 0 ? $ttl : 86400;
     }

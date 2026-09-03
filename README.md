@@ -26,18 +26,35 @@ a store with no lock support at all is refused rather than silently permitted to
 
 ```bash
 composer require amidesfahani/laravel-sms
-php artisan vendor:publish --tag=sms-config
+php artisan vendor:publish --tag=laravel-sms-config
 php artisan migrate
 ```
 
 That is the whole installation. The service provider is discovered automatically, and **the five package
 migrations are loaded from the package** — `php artisan migrate` runs them where they are, and they stay
 in step with the package when it is upgraded. Publishing them is offered
-(`--tag=sms-migrations`) for the one case that needs it: a project that must edit the schema, which then
+(`--tag=laravel-sms-migrations`) for the one case that needs it: a project that must edit the schema, which then
 owns the copies. Do one or the other, not both.
 
 The config file is the opposite way round: publish it, because it is yours to edit. Everything unset in
 your copy falls back to the package's defaults.
+
+⚠️ **The file is `config/laravel-sms.php`, and the key is `config('laravel-sms.*')` — deliberately not
+`config/sms.php`.** `sms` is too generic a name for a package to take, and an application that already has
+an SMS subsystem has almost certainly taken it. Laravel merges a package's configuration into the
+application's shallowly, with the application's file on top, so two files under one key do not coexist:
+for every top-level key both define one wins outright and the other disappears, with no error and with
+each side still reading what it believes are its own settings. Keeping the generic name free means
+**your** `config/sms.php` and this package can sit side by side with no bridge, no merge and no precedence
+rule between them. There is no fallback to `sms.*` and no way to choose the namespace from the
+environment.
+
+Environment variables are unchanged and still read `SMS_*`. They were never what collided, and the
+package config key and the environment are separate contracts.
+
+⚠️ **Publish the config before you migrate, in that order.** It is the only chance to change the table
+names, and after the migration has run they are a schema you own rather than a setting you configure —
+see [Table names](#table-names).
 
 Then switch it on, per environment:
 
@@ -50,6 +67,53 @@ restored onto a staging machine arrives complete with working credentials, enabl
 people's real numbers. Sending has to be opted into by an environment file, never inherited from a dump.
 With it off, every message is still recorded, as `suppressed`, and nothing reaches a phone.
 
+## Table names
+
+This package creates five tables. By default they are called:
+
+```text
+sms_gateways   sms_templates   sms_template_gateways   sms_messages   sms_attempts
+```
+
+**If your application already owns a table with one of those names, map this package somewhere else
+before you run its migrations.** `Schema::create()` refuses a name that already exists, so the first
+migration fails outright rather than merging into your data — which is the safe failure, but it is still
+a failure. In your published `config/laravel-sms.php`:
+
+```php
+'tables' => [
+    'gateways'          => 'sms_core_gateways',
+    'templates'         => 'sms_core_templates',
+    'template_gateways' => 'sms_core_template_gateways',
+    'messages'          => 'sms_core_messages',
+    'attempts'          => 'sms_core_attempts',
+],
+```
+
+Everything follows: the migrations, the models, every relation, the foreign keys, the index names and the
+one raw join in the router. Nothing else in your application changes, and no management layer built on
+this package needs to know — it reads the tables through these models.
+
+**Set them before the first migration.** ⚠️ **This is a schema mapping, not a rename.** Changing a name
+on an installation that has already migrated moves nothing: this package simply starts looking for a
+table that is not there, and your rows stay where they were. If you need to move an installed schema,
+that is a migration your application writes, and it is yours to write — this package will not attempt it
+for you, because a silent automatic table rename is not something a package should ever do to a
+production database.
+
+A few rules, all of which throw rather than falling back:
+
+- a name may not be empty, blank, or padded with whitespace;
+- no two of the five may share a name;
+- no dots, quotes, backticks, backslashes or semicolons — a dot in particular is read by Laravel as a
+  schema separator and would silently split the name in two;
+- at most 30 characters. Not because table names may not be longer, but because Laravel builds **index**
+  names out of them and MySQL allows only 64 for those too; the longest index here adds 34.
+
+⚠️ A configured name is never quietly replaced by a default. An application configures these precisely
+because it already owns `sms_messages`, so falling back on a typo would point this package at your data
+and write to it.
+
 ## Configure a gateway
 
 ```php
@@ -58,7 +122,7 @@ use Amid\Sms\Models\SmsGateway;
 SmsGateway::create([
     'key' => 'kavenegar-main',
     'label' => 'Kavenegar',
-    'driver' => 'kavenegar',          // a key of config('sms.drivers')
+    'driver' => 'kavenegar',          // a key of config('laravel-sms.drivers')
     'sender' => '30001234',
     'priority' => 10,                 // lower goes first
 ])->forceFill([
@@ -254,7 +318,7 @@ answered, and a signature that let you omit it would quietly reject every correc
 
 An OTP template is an ordinary template: bound to gateways the ordinary way, routed by capability and
 country, failed over by the ordinary rules. There is no OTP gateway, no OTP driver and no
-`sms.otp_driver`.
+`laravel-sms.otp_driver`.
 
 The code arrives as the logical variable `code`, so each gateway's `parameter_map` translates it into
 whatever that provider calls it. A caller supplying `code` itself is rejected.
@@ -282,7 +346,7 @@ to know it.
 ⚠️ **Every OTP send is sensitive**, whether or not the template says so — OTP safety must not depend on
 somebody having ticked a box.
 
-Defaults (`config/sms.php`): 6 digits, 180s expiry, 90s resend cooldown, 5 attempts. `Otp::send()` is
+Defaults (`config/laravel-sms.php`): 6 digits, 180s expiry, 90s resend cooldown, 5 attempts. `Otp::send()` is
 synchronous: a code is worth ninety seconds, and immediate multi-gateway failover already provides the
 availability a queue would have been for.
 
@@ -308,6 +372,38 @@ Sms::to('09121234567')
 Variables are **logical names and plain values**. Never a model, never a path like `order.customer.name` —
 the package has no way to resolve one and no business knowing what your models are called. Deciding *when*
 to send is your application's job; this package only carries the message.
+
+### Pinning a send to one gateway
+
+Ordinary sending picks a gateway for you, and every mechanism in this package is built to move a message
+*away* from one that is failing. `viaGateway()` is for the opposite question — **does this one gateway
+work** — which is what somebody needs after typing in a new API key:
+
+```php
+Sms::to('09121234567')
+    ->template('connectivity-check')
+    ->with(['customer_name' => 'Amid'])
+    ->viaGateway('kavenegar-main')   // a gateway key, or an SmsGateway
+    ->send();
+```
+
+A pinned send is **an ordinary send with a narrower candidate list**, not a mode and not a bypass.
+Everything still applies, decided by the same code: the master switch, phone normalisation, the country
+the gateway serves, the gateway's and binding's enabled state, the capability the binding's mode requires,
+the circuit breaker, parameter mapping, the sensitive-message policy, and the `SmsMessage` and
+`SmsAttempt` rows that record what happened.
+
+- ⚠️ **It never fails over.** At most one gateway is a candidate, so there is nothing to move on to. If the
+  pinned gateway is ineligible, unusable, circuit-open or simply refuses, that *is* the answer — quietly
+  proving a different gateway would answer a question nobody asked.
+- ⚠️ **It never advances a routing cursor.** Round-robin and weighted round-robin state is not read and not
+  written, so a test send cannot change which gateway the next real message goes to.
+- ⚠️ **It never bypasses an open circuit.** Reset the circuit first, deliberately, if that is what you mean.
+- ⚠️ **It requires a binding.** The gateway must be bound to the template being sent; pinning does not
+  invent configuration. There is deliberately no template-less "send arbitrary text through this gateway"
+  API — a message with no logical template could not be mapped, recorded or explained.
+- ⚠️ **Synchronous only.** `->viaGateway(...)->queue()` throws rather than silently sending unpinned: the
+  caller of a pinned send is waiting for an answer, and a queued one answers nobody.
 
 ## What throws and what is recorded
 
@@ -421,7 +517,7 @@ A counter in the process would distribute nothing: four queue workers are four p
 starting at zero, and four copies of the same first gateway. The cursor is read, incremented and written
 inside a Laravel cache lock, so two workers hitting it in the same millisecond get different slots.
 
-Use `database`, `redis`, `memcached` or `dynamodb` (`sms.routing.store`, defaulting to the processing-lock
+Use `database`, `redis`, `memcached` or `dynamodb` (`laravel-sms.routing.store`, defaulting to the processing-lock
 store). `array` is per-process and `file` is per-machine — with either, a second worker or a second server
 distributes its own cycle rather than joining yours. On a store with no lock support at all, the package
 **logs an error and routes by configured priority** rather than pretending: a process-local counter that
@@ -510,7 +606,7 @@ $breaker->reset($gateway);    // clears the observation - and nothing else
 ```
 
 `reset()` does not enable a disabled gateway, does not touch priority, credentials or country policy, and
-sends nothing. Configure it under `sms.circuit_breaker`; set `enabled` to false to switch it off entirely.
+sends nothing. Configure it under `laravel-sms.circuit_breaker`; set `enabled` to false to switch it off entirely.
 
 ## Message states
 
@@ -571,10 +667,10 @@ Rules worth knowing before you build on it:
 
 ## Phone numbers
 
-Destinations are stored canonically in E.164 (`+989121234567`). `sms.phone.default_region` is used only for
+Destinations are stored canonically in E.164 (`+989121234567`). `laravel-sms.phone.default_region` is used only for
 input that carries no country code of its own.
 
-`sms.phone.require_mobile` is **off by default**. A parsing library can classify a number, but that
+`laravel-sms.phone.require_mobile` is **off by default**. A parsing library can classify a number, but that
 classification is not a universal statement about whether the number can receive an SMS — it varies by
 country and carrier — so Core does not reject valid international destinations on line type alone. Turn it
 on if your application genuinely wants mobile-only destinations. E.164 validity is checked either way.
@@ -746,11 +842,31 @@ write that follows the HTTP call, and makes every *knowable* ambiguity terminal 
 ## Adding a provider
 
 Implement `Amid\Sms\Contracts\Driver`, declare its capabilities, and register the class in
-`config('sms.drivers')`. If the provider can report delivery, also implement
+`config('laravel-sms.drivers')`. If the provider can report delivery, also implement
 `Amid\Sms\Contracts\ReportsDeliveryStatus` and declare `Capability::DeliveryReport` — both together or
 neither, so the capability stays a fact rather than a claim. A driver must not throw for provider behaviour; it translates its provider's
 vocabulary into a `SendResult`. Provider quirks — parameter limits, forbidden characters, an id buried in an
 odd place — belong inside the driver, never in calling code.
+
+### Asking what a driver can do
+
+```php
+use Amid\Sms\Gateways\GatewayRegistry;
+
+app(GatewayRegistry::class)->registered();               // ['log', 'kavenegar', …]
+app(GatewayRegistry::class)->capabilitiesFor('twilio');  // [Capability::Text, Capability::DeliveryReport]
+```
+
+`capabilitiesFor()` answers by driver **name**, before any gateway names it — which is what a management
+layer needs to know before offering `pattern` as a delivery mode or a "refresh delivery" action. It builds
+the driver with an empty configuration and asks it: **nothing is sent, nothing is contacted, and no
+credential is read.** ⚠️ Capabilities are therefore treated as a property of the class; a driver whose
+capabilities genuinely varied by account should be asked through `driverFor()` instead. An unregistered
+name throws `GatewayNotConfigured` rather than returning an empty list — a driver that cannot be found is
+not a driver that can do nothing.
+
+⚠️ **Driver instances are never cached.** `driverFor()` builds a fresh one from the gateway as it stands
+now, so a gateway re-credentialed a moment ago is the gateway that sends. Nothing has to be invalidated.
 
 ## Managing credentials (for a future admin layer)
 

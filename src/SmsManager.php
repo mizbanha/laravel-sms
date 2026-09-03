@@ -74,6 +74,6 @@ class SmsManager
      */
     public function enabled(): bool
     {
-        return (bool) config('sms.enabled', false);
+        return (bool) config('laravel-sms.enabled', false);
     }
 }

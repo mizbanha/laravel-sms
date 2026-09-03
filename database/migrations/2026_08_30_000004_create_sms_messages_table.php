@@ -1,5 +1,6 @@
 <?php
 
+use Amid\Sms\Support\TableNames;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -19,13 +20,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('sms_messages', function (Blueprint $table) {
+        Schema::create(TableNames::messages(), function (Blueprint $table) {
             $table->id();
 
             // Which wording. Null once a template is deleted - the body below is
             // then the surviving record of what was said.
             $table->foreignId('sms_template_id')->nullable()
-                ->constrained('sms_templates')->nullOnDelete();
+                ->constrained(TableNames::templates())->nullOnDelete();
 
             /*
              * The destination, canonical, in E.164 with its leading plus:
@@ -128,7 +129,7 @@ return new class extends Migration
              * order is the same on every run by construction.
              */
             $table->foreignId('routing_gateway_id')->nullable()
-                ->constrained('sms_gateways')->nullOnDelete();
+                ->constrained(TableNames::gateways())->nullOnDelete();
 
             // When a gateway accepted it. Null for everything else, including
             // messages whose fate is unknown.
@@ -173,6 +174,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('sms_messages');
+        Schema::dropIfExists(TableNames::messages());
     }
 };

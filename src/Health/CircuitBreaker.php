@@ -438,7 +438,7 @@ final class CircuitBreaker
      */
     private function usable(): bool
     {
-        if (! (bool) config('sms.circuit_breaker.enabled', true)) {
+        if (! (bool) config('laravel-sms.circuit_breaker.enabled', true)) {
             return false;
         }
 
@@ -451,8 +451,8 @@ final class CircuitBreaker
 
             Log::error(
                 'SMS circuit breaker disabled: the configured cache store does not support atomic operations. '
-                .'Point sms.circuit_breaker.store at a store that does (database, redis, memcached, dynamodb or array), '
-                .'or set sms.circuit_breaker.enabled to false to stop this message.'
+                .'Point laravel-sms.circuit_breaker.store at a store that does (database, redis, memcached, dynamodb or array), '
+                .'or set laravel-sms.circuit_breaker.enabled to false to stop this message.'
             );
         }
 
@@ -461,7 +461,7 @@ final class CircuitBreaker
 
     private function store(): Repository
     {
-        return Cache::store(config('sms.circuit_breaker.store') ?? config('sms.lock.store'));
+        return Cache::store(config('laravel-sms.circuit_breaker.store') ?? config('laravel-sms.lock.store'));
     }
 
     private function threshold(): int
@@ -491,7 +491,7 @@ final class CircuitBreaker
     {
         return max(
             $this->positive('probe_ttl', 30),
-            (int) config('sms.http.timeout', 15) + (int) config('sms.http.connect_timeout', 5),
+            (int) config('laravel-sms.http.timeout', 15) + (int) config('laravel-sms.http.connect_timeout', 5),
         );
     }
 
@@ -505,11 +505,11 @@ final class CircuitBreaker
      */
     private function positive(string $name, int $default): int
     {
-        $value = config('sms.circuit_breaker.'.$name, $default);
+        $value = config('laravel-sms.circuit_breaker.'.$name, $default);
 
         if (! is_numeric($value) || (int) $value < 1) {
             throw new SmsException(sprintf(
-                'sms.circuit_breaker.%s must be a whole number of seconds greater than zero.',
+                'laravel-sms.circuit_breaker.%s must be a whole number of seconds greater than zero.',
                 $name,
             ));
         }

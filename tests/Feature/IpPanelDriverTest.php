@@ -7,6 +7,7 @@ use Amid\Sms\Enums\FailureKind;
 use Amid\Sms\Enums\SendOutcome;
 use Amid\Sms\Facades\Sms;
 use Amid\Sms\Models\SmsGateway;
+use Amid\Sms\Support\TableNames;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -297,7 +298,7 @@ it('never lets the API token reach the stored error or the stored payload', func
 it('gives the token every protection the other gateways get', function () {
     [$gateway] = $this->configureGateway(driver: 'ippanel', credentials: ['api_key' => 'ippanel-secret-token']);
 
-    expect(SmsGateway::query()->getConnection()->table('sms_gateways')
+    expect(SmsGateway::query()->getConnection()->table(TableNames::gateways())
         ->where('id', $gateway->getKey())->value('credentials'))
         ->not->toContain('ippanel-secret-token')
         ->and($gateway->toArray())->not->toHaveKey('credentials')

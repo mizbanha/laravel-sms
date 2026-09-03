@@ -15,6 +15,7 @@ use Amid\Sms\Otp\OtpManager;
 use Amid\Sms\Otp\RandomOtpCodeGenerator;
 use Amid\Sms\Phone\LibPhoneNumberNormalizer;
 use Amid\Sms\Sending\MessageDispatcher;
+use Amid\Sms\Support\TableNames;
 use Amid\Sms\Templates\ParameterMapper;
 use Amid\Sms\Templates\TemplateRenderer;
 use Illuminate\Support\ServiceProvider;
@@ -23,19 +24,39 @@ class SmsServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/sms.php', 'sms');
+        /*
+         * ⚠️ **`laravel-sms`, deliberately not `sms`.**
+         *
+         * A package does not get to own a namespace as generic as `sms`. The first
+         * real consumer proved it: an application that had owned `config/sms.php`
+         * for eleven stages installed this package, and because `mergeConfigFrom()`
+         * is a shallow `array_merge` with the application's file on top, the two
+         * files silently fought over every key they shared. `drivers` was
+         * `name => [driver => class, …]` on one side and `name => class` on the
+         * other; `queue` was a boolean and an array. Neither system could see that
+         * the other had won.
+         *
+         * Named for the package, so an application with its own SMS subsystem keeps
+         * `config/sms.php` and this reads `config/laravel-sms.php`, and no bridge,
+         * merge or precedence rule is needed between them.
+         *
+         * ⚠️ There is no fallback to `sms.*` and no way to switch namespaces from
+         * the environment. One name, decided here. Corrected before the first tag,
+         * so nothing is owed backwards compatibility.
+         */
+        $this->mergeConfigFrom(__DIR__.'/../config/laravel-sms.php', 'laravel-sms');
 
         // Bound to the contract, not the class, so an application that needs a
         // different parsing strategy replaces one binding and nothing else.
         $this->app->singleton(PhoneNormalizer::class, fn ($app): PhoneNormalizer => new LibPhoneNumberNormalizer(
-            defaultRegion: (string) $app['config']->get('sms.phone.default_region', 'IR'),
-            requireMobile: (bool) $app['config']->get('sms.phone.require_mobile', false),
+            defaultRegion: (string) $app['config']->get('laravel-sms.phone.default_region', 'IR'),
+            requireMobile: (bool) $app['config']->get('laravel-sms.phone.require_mobile', false),
         ));
 
         // Singletons because they memoise driver instances: one worker sending ten
         // thousand messages should build one driver, not ten thousand.
         $this->app->singleton(GatewayRegistry::class, fn ($app): GatewayRegistry => new GatewayRegistry(
-            (array) $app['config']->get('sms.drivers', []),
+            (array) $app['config']->get('laravel-sms.drivers', []),
         ));
 
         /*
@@ -68,16 +89,35 @@ class SmsServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        /*
+         * ⚠️ The whole table map is checked once, here, so a broken one is found
+         * when the application boots rather than when it first writes a message.
+         *
+         * `TableNames` validates each name again on every read, which catches the
+         * individual mistakes; this call is what additionally catches two tables
+         * configured with the SAME name — a map that is only wrong when read as a
+         * whole, and whose symptom would otherwise be attempts quietly inserted
+         * into the messages table.
+         */
+        TableNames::validate();
+
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
         if ($this->app->runningInConsole()) {
+            /*
+             * ⚠️ The tags carry the package's name for the same reason the config
+             * key does. `--tag=sms-config` is a name any SMS package might claim,
+             * and Laravel runs every provider that registered it — so one
+             * `vendor:publish` could write two packages' files. `filament-sms`
+             * already prefixes its own tags; these now match.
+             */
             $this->publishes([
-                __DIR__.'/../config/sms.php' => $this->app->configPath('sms.php'),
-            ], 'sms-config');
+                __DIR__.'/../config/laravel-sms.php' => $this->app->configPath('laravel-sms.php'),
+            ], 'laravel-sms-config');
 
             $this->publishes([
                 __DIR__.'/../database/migrations' => $this->app->databasePath('migrations'),
-            ], 'sms-migrations');
+            ], 'laravel-sms-migrations');
         }
     }
 }

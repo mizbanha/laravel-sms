@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Amid\Sms\Enums\DeliveryMode;
 use Amid\Sms\Facades\Sms;
 use Amid\Sms\Models\SmsTemplate;
+use Amid\Sms\Support\TableNames;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -79,7 +80,7 @@ it('persists neither body nor variables for a sensitive template', function () {
         ->and($message->sms_template_id)->not->toBeNull();
 
     // And nothing survives in the raw columns either.
-    $row = DB::table('sms_messages')->where('id', $message->getKey())->first();
+    $row = DB::table(TableNames::messages())->where('id', $message->getKey())->first();
     expect(json_encode($row))->not->toContain(SECRET);
 });
 
@@ -209,8 +210,8 @@ it('persists no provider error text at all for a sensitive message', function ()
 
     // Nothing anywhere in either raw row.
     $rows = json_encode([
-        DB::table('sms_messages')->where('id', $message->getKey())->first(),
-        DB::table('sms_attempts')->where('id', $attempt->getKey())->first(),
+        DB::table(TableNames::messages())->where('id', $message->getKey())->first(),
+        DB::table(TableNames::attempts())->where('id', $attempt->getKey())->first(),
     ]);
 
     expect($rows)->not->toContain(SECRET);

@@ -7,6 +7,7 @@ use Amid\Sms\Enums\FailureKind;
 use Amid\Sms\Enums\SendOutcome;
 use Amid\Sms\Facades\Sms;
 use Amid\Sms\Models\SmsTemplateGateway;
+use Amid\Sms\Support\TableNames;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -101,7 +102,7 @@ it('stores a mapping as an ordered list and reads it back in that order', functi
     // And the raw column really is a JSON array, whatever the cast makes of it.
     // Straight off the connection, past the model cast, so what is asserted is the
     // bytes in the column.
-    $raw = DB::table('sms_template_gateways')->where('id', $binding->getKey())->value('parameter_map');
+    $raw = DB::table(TableNames::templateGateways())->where('id', $binding->getKey())->value('parameter_map');
 
     expect(json_decode($raw, true))->toBe($stored)
         ->and(str_starts_with(trim($raw), '['))->toBeTrue();
@@ -267,7 +268,7 @@ it('survives a real round trip through whichever database is under test', functi
     Http::fake(['*' => Http::response(['return' => ['status' => 200], 'entries' => [['messageid' => 5]]])]);
 
     // The raw column, past the model cast: what the database actually holds.
-    $stored = (string) DB::table('sms_template_gateways')->value('parameter_map');
+    $stored = (string) DB::table(TableNames::templateGateways())->value('parameter_map');
 
     expect($stored)->toContain('z_customer')
         // A list, not an object - there are no keys left for an engine to

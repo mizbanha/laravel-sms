@@ -35,8 +35,8 @@ trait InteractsWithHttp
     protected function http(): PendingRequest
     {
         return Http::acceptJson()
-            ->timeout((int) config('sms.http.timeout', 15))
-            ->connectTimeout((int) config('sms.http.connect_timeout', 5));
+            ->timeout((int) config('laravel-sms.http.timeout', 15))
+            ->connectTimeout((int) config('laravel-sms.http.connect_timeout', 5));
     }
 
     /**

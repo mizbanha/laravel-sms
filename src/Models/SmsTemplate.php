@@ -6,6 +6,7 @@ namespace Amid\Sms\Models;
 
 use Amid\Sms\Enums\RoutingStrategy;
 use Amid\Sms\Exceptions\InvalidRoutingConfiguration;
+use Amid\Sms\Support\TableNames;
 use Amid\Sms\Templates\PlaceholderParser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -30,7 +31,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class SmsTemplate extends Model
 {
-    protected $table = 'sms_templates';
 
     protected $fillable = ['key', 'name', 'body', 'is_sensitive', 'routing_strategy'];
 
@@ -47,6 +47,16 @@ class SmsTemplate extends Model
             'is_sensitive' => 'boolean',
             'routing_strategy' => RoutingStrategy::class,
         ];
+    }
+
+    /**
+     * ⚠️ Resolved on every query rather than declared in `$table`, so a configured
+     * name reaches relations, eager loads and queued jobs. See `SmsGateway` for the
+     * full reasoning, and `Amid\Sms\Support\TableNames` for the map.
+     */
+    public function getTable(): string
+    {
+        return $this->table ?? TableNames::templates();
     }
 
     /**

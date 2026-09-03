@@ -54,10 +54,50 @@ abstract class TestCase extends Orchestra
 
         // On unless a test says otherwise. The default is off (that is the point of
         // the switch), so most tests have to turn it on to exercise anything.
-        $app['config']->set('sms.enabled', true);
+        $app['config']->set('laravel-sms.enabled', true);
 
         // The array store supports atomic locks, which is what the send job needs.
         $app['config']->set('cache.default', 'array');
+
+        if (self::usingCustomTables()) {
+            $app['config']->set('laravel-sms.tables', self::customTables());
+        }
+    }
+
+    /**
+     * ⚠️ Whether this run maps every table to a non-default name.
+     *
+     * Set `SMS_TEST_TABLES=custom` and **the entire suite** runs against
+     * `pkg_sms_*` instead of `sms_*`. That is the point: a handful of dedicated
+     * tests could prove the migrations create differently-named tables, and would
+     * prove nothing about whether a send, a failover, a routing cursor, an OTP
+     * verification or a delivery refresh still works — which is where a missed
+     * hardcoded name would actually surface.
+     */
+    public static function usingCustomTables(): bool
+    {
+        return env('SMS_TEST_TABLES') === 'custom';
+    }
+
+    /**
+     * ⚠️ Deliberately not a prefix of the defaults.
+     *
+     * `sms_gateways` → `pkg_sms_gateways` would still contain the default name as a
+     * substring, so a `str_contains($sql, 'sms_gateways')` assertion — or a stray
+     * hardcoded literal — could pass by accident. These names share no substring
+     * with the ones they replace beyond the underscore-separated words.
+     *
+     * @return array<string, string>
+     */
+    public static function customTables(): array
+    {
+        return [
+            'gateways' => 'pkg_routes',
+            'templates' => 'pkg_wordings',
+            'template_gateways' => 'pkg_wording_routes',
+            'messages' => 'pkg_dispatches',
+            'attempts' => 'pkg_tries',
+        ];
     }
 
     /**

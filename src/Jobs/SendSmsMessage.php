@@ -68,8 +68,8 @@ class SendSmsMessage implements ShouldQueue, ShouldBeEncrypted
 
     public function handle(MessageDispatcher $dispatcher): void
     {
-        $lock = Cache::store(config('sms.lock.store'))
-            ->lock($this->lockKey(), (int) config('sms.lock.seconds', 120));
+        $lock = Cache::store(config('laravel-sms.lock.store'))
+            ->lock($this->lockKey(), (int) config('laravel-sms.lock.seconds', 120));
 
         if (! $lock->get()) {
             // Another worker holds this message right now. Come back rather than
@@ -110,7 +110,7 @@ class SendSmsMessage implements ShouldQueue, ShouldBeEncrypted
      */
     private function mayRetry(): bool
     {
-        return $this->attempts() < (int) config('sms.retry.tries', 3);
+        return $this->attempts() < (int) config('laravel-sms.retry.tries', 3);
     }
 
     /**
@@ -120,7 +120,7 @@ class SendSmsMessage implements ShouldQueue, ShouldBeEncrypted
      */
     private function backoffSeconds(): int
     {
-        $backoff = (array) config('sms.retry.backoff', [10, 60, 300]);
+        $backoff = (array) config('laravel-sms.retry.backoff', [10, 60, 300]);
         $index = min(max($this->attempts() - 1, 0), count($backoff) - 1);
 
         return (int) ($backoff[$index] ?? 60);

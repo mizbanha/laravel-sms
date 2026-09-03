@@ -11,6 +11,7 @@ use Amid\Sms\Models\SmsTemplate;
 use Amid\Sms\Models\SmsTemplateGateway;
 use Amid\Sms\Otp\OtpStatus;
 use Amid\Sms\Otp\RandomOtpCodeGenerator;
+use Amid\Sms\Support\TableNames;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -410,7 +411,7 @@ it('destroys the challenge and releases the cooldown when delivery definitively 
 it('leaves no usable challenge when the master switch is off', function () {
     // Nothing reached a phone, so nothing should be verifiable. A live challenge
     // here would be a code nobody was ever sent.
-    config()->set('sms.enabled', false);
+    config()->set('laravel-sms.enabled', false);
     otpTemplate();
     Http::fake();
 
@@ -508,8 +509,8 @@ it('forces sensitivity even when the template is not marked', function () {
         ->and($attempt->provider_payload)->toBeNull();
 
     // And nothing anywhere in either row.
-    expect(json_encode(DB::table('sms_messages')->get()))->not->toContain(OTP_CODE)
-        ->and(json_encode(DB::table('sms_attempts')->get()))->not->toContain(OTP_CODE);
+    expect(json_encode(DB::table(TableNames::messages())->get()))->not->toContain(OTP_CODE)
+        ->and(json_encode(DB::table(TableNames::attempts())->get()))->not->toContain(OTP_CODE);
 });
 
 it('keeps the code out of a provider error that quoted it', function () {
@@ -522,7 +523,7 @@ it('keeps the code out of a provider error that quoted it', function () {
 
     Otp::send('09121234567', 'login-otp');
 
-    expect(json_encode(DB::table('sms_attempts')->get()))->not->toContain(OTP_CODE);
+    expect(json_encode(DB::table(TableNames::attempts())->get()))->not->toContain(OTP_CODE);
 });
 
 it('keeps the code out of the log driver output', function () {

@@ -80,7 +80,7 @@ final class LogDriver implements Driver
      */
     private function channel(): string
     {
-        $channel = $this->config->option('channel') ?? config('sms.log.channel');
+        $channel = $this->config->option('channel') ?? config('laravel-sms.log.channel');
 
         return is_string($channel) && $channel !== '' ? $channel : (string) config('logging.default', 'stack');
     }

@@ -235,7 +235,7 @@ it('never consults the circuit for a disabled gateway', function () {
 it('records no circuit evidence for a suppressed message', function () {
     // ⚠️ The master switch means no provider call happened, so there is nothing to
     // observe. Suppression is neutral, not a failure.
-    config()->set('sms.enabled', false);
+    config()->set('laravel-sms.enabled', false);
     circuitChain([['kavenegar', 'first']]);
 
     $message = sendOne();

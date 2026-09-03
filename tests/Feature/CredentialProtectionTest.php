@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Amid\Sms\Gateways\GatewayConfig;
 use Amid\Sms\Models\SmsGateway;
+use Amid\Sms\Support\TableNames;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 it('stores credentials encrypted rather than as readable text', function () {
     [$gateway] = $this->configureGateway(credentials: ['api_key' => 'super-secret-key']);
 
-    $raw = DB::table('sms_gateways')->where('id', $gateway->getKey())->value('credentials');
+    $raw = DB::table(TableNames::gateways())->where('id', $gateway->getKey())->value('credentials');
 
     expect($raw)->not->toContain('super-secret-key')
         // Still readable through the model, which is the only way in.

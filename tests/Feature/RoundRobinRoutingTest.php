@@ -325,7 +325,7 @@ it('keeps a queued message on the gateway it was first routed to, whatever the c
     // Switched off for this test only. It would open all three circuits partway
     // through the ten messages below, which is correct behaviour and would drown
     // the thing under test - where a RETRY starts - in health evidence.
-    config()->set('sms.circuit_breaker.enabled', false);
+    config()->set('laravel-sms.circuit_breaker.enabled', false);
 
     Queue::fake();
     $message = Sms::to('09121234567')->template('order-created')->with(['customer_name' => 'Amid'])->queue();
@@ -430,7 +430,7 @@ it('carries the same one-time code to the fallback gateway a rotation chose', fu
 });
 
 it('advances no cursor for a message the master switch suppressed', function () {
-    config()->set('sms.enabled', false);
+    config()->set('laravel-sms.enabled', false);
 
     $template = rrTemplate();
     rrBind($template, 'a');
@@ -442,7 +442,7 @@ it('advances no cursor for a message the master switch suppressed', function () 
         ->and($suppressed->routing_gateway_id)->toBeNull()
         ->and($suppressed->attempts()->count())->toBe(0);
 
-    config()->set('sms.enabled', true);
+    config()->set('laravel-sms.enabled', true);
 
     /*
      * ⚠️ The distribution represents traffic we actually intended to dispatch. A

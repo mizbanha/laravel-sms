@@ -60,10 +60,15 @@ function meliSend()
     return Sms::to('09121234567')->template('order-created')->with(['customer_name' => 'Amid'])->send();
 }
 
-/** Every return code the vendor documents for SendSMS. */
+/**
+ * Every return code the vendor documents for SendSMS.
+ *
+ * ⚠️ `1` is documented for this endpoint too and is deliberately absent: it means
+ * the request succeeded, so it belongs in the acceptance tests, not here.
+ */
 function meliTextCodes(): array
 {
-    return [-110, -109, -108, 0, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 17, 18, 35];
+    return [-111, -110, -109, -108, 0, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 17, 18, 35];
 }
 
 /** Every return code the vendor documents for BaseServiceNumber. */
@@ -261,6 +266,82 @@ it('does not lend one endpoint the other endpoint documentation', function () {
         ->and($attempt->safe_to_failover)->toBeFalse();
 });
 
+it('reads -111 as a text error this endpoint documents, and lets the message move on', function () {
+    /*
+     * ⚠️ Regression, found by reading the vendor's own REST guide against this
+     * driver.
+     *
+     * `-111` — "IP درخواست کننده نامعتبر است" — is documented for SendSMS, and
+     * this driver's text table did not list it. An unlisted code falls to
+     * `unknown()`, which claims no meaning and, correctly for something unknown,
+     * never fails over. Here that caution was exactly wrong: an API allowlist is a
+     * property of the ACCOUNT, so the next gateway is the one thing that WOULD
+     * have carried the message, and it was the one thing ruled out.
+     *
+     * The asymmetry is what makes this worth its own test rather than a row in the
+     * table above: the fix has to leave the message failable-over AND stop the
+     * driver describing it as somebody else's endpoint.
+     */
+    meliText();
+
+    Http::fake(['*' => Http::response(['Value' => '-111', 'RetStatus' => 1])]);
+
+    $attempt = meliSend()->attempts()->first();
+
+    expect($attempt->outcome)->toBe(SendOutcome::Rejected)
+        ->and($attempt->failure_kind)->toBe(FailureKind::GatewayConfiguration)
+        ->and($attempt->safe_to_failover)->toBeTrue()
+        ->and($attempt->retryable_on_same_gateway)->toBeFalse()
+        ->and($attempt->provider_message_id)->toBeNull()
+        ->and($attempt->error)->toContain('IP')
+        // The tell of the bug: the unknown-code wording, on a code this endpoint
+        // documents perfectly well.
+        ->and($attempt->error)->not->toContain('other send method')
+        ->and($attempt->error)->not->toContain('does not document');
+});
+
+it('accepts the documented text acknowledgement without inventing a message id', function () {
+    /*
+     * ⚠️ Regression. `SendSMS` lists `1` among its return values meaning "درخواست
+     * با موفقیت انجام شد" — the request succeeded. It is not a recId, and it was
+     * being stored as one: any positive number the endpoint does not document as
+     * an error passes `isRecordId()`.
+     *
+     * The outcome was never wrong, which is why nothing caught it. The RECORD was:
+     * a message filed against provider id "1", which `GetDeliveries2` will happily
+     * answer for — about a different message, or about nothing.
+     *
+     * Accepted, and with no id, because that is what this response actually says.
+     */
+    meliText();
+
+    Http::fake(['*' => Http::response(['Value' => '1', 'RetStatus' => 1, 'StrRetStatus' => 'Ok'])]);
+
+    $attempt = meliSend()->attempts()->first();
+
+    expect($attempt->outcome)->toBe(SendOutcome::Accepted)
+        ->and($attempt->provider_message_id)->toBeNull()
+        ->and($attempt->failure_kind)->toBeNull();
+});
+
+it('does not read the text acknowledgement as success on the pattern endpoint', function () {
+    /*
+     * ⚠️ The other half of the same fix. `BaseServiceNumber` publishes no such
+     * sentinel — its successful values are longer than fifteen digits — so a bare
+     * `1` there is an outcome the vendor does not document, and borrowing the text
+     * endpoint's meaning would file a refusal as a delivered message.
+     */
+    meliPattern();
+
+    Http::fake(['*' => Http::response(['Value' => '1', 'RetStatus' => 1, 'StrRetStatus' => 'Ok'])]);
+
+    $attempt = meliSend()->attempts()->first();
+
+    expect($attempt->outcome)->toBe(SendOutcome::Rejected)
+        ->and($attempt->provider_message_id)->toBeNull()
+        ->and($attempt->error)->toContain('does not document');
+});
+
 it('does not treat a pattern-only error code as a text error', function (int $code) {
     /*
      * ⚠️ Acceptance is per operation, exactly as the research is.
@@ -369,6 +450,9 @@ it('classifies documented codes by what they actually mean', function (
     'invalid sender' => [5, FailureKind::GatewayConfiguration, false, true],
     'inactive account' => [10, FailureKind::GatewayConfiguration, false, true],
     'api key required' => [-110, FailureKind::GatewayConfiguration, false, true],
+    'unauthorised requesting ip' => [-111, FailureKind::GatewayConfiguration, false, true],
+    'ip allowlist not configured' => [-109, FailureKind::GatewayConfiguration, false, true],
+    'ip blocked' => [-108, FailureKind::GatewayConfiguration, false, true],
 
     // Quotas: another gateway has its own quota, but waiting five minutes on this
     // one will not clear a daily limit.
@@ -437,7 +521,7 @@ it('treats a documented internal provider error as uncertain, not as a refusal',
         ->and($message->status->value)->toBe('unknown');
 });
 
-it('reads a documented pattern code that the text endpoint does not share', function (
+it('reads a documented pattern code with the meaning its own endpoint gives it', function (
     int $code,
     FailureKind $kind,
     bool $failover,
@@ -460,6 +544,10 @@ it('reads a documented pattern code that the text endpoint does not share', func
     // The account and the line.
     'webservice disabled' => [-1, FailureKind::GatewayConfiguration, true],
     'line not defined' => [-3, FailureKind::GatewayConfiguration, true],
+    // ⚠️ The one row here the text endpoint DOES share. It used to be pattern-only
+    // as far as this driver was concerned, which was the bug; it stays in this
+    // table to prove the pattern side kept its meaning when the text side gained
+    // one, rather than the two endpoints having been quietly merged.
     'invalid requester ip' => [-111, FailureKind::GatewayConfiguration, true],
 
     // The values themselves.

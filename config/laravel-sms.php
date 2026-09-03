@@ -1,5 +1,34 @@
 <?php
 
+/*
+|--------------------------------------------------------------------------
+| Laravel SMS
+|--------------------------------------------------------------------------
+|
+| Read as `config('laravel-sms.*')`, from `config/laravel-sms.php`.
+|
+| ⚠️ **Deliberately not `config/sms.php`.** `sms` is too generic a name for a
+| package to claim, and an application that already has an SMS subsystem of its
+| own has almost certainly claimed it first. Laravel merges a package's config
+| into the application's shallowly, with the application's file on top, so two
+| files under one key do not coexist — they overwrite each other per top-level
+| key, silently, and each side goes on reading what it thinks is its own.
+|
+| That is not hypothetical: the first application to install this package had
+| owned `config/sms.php` since its twelfth stage, with a `drivers` array of a
+| completely different shape. Nothing threw. The gateway registry simply found
+| entries it could not read.
+|
+| So this file is named for its package, and an application keeps `config/sms.php`
+| for whatever it already had there. There is no fallback to `sms.*`, no way to
+| select the namespace from the environment, and nothing to configure about it.
+|
+| Environment variable names are unchanged and still read `SMS_*`. They are a
+| separate contract, they were never the thing that collided, and renaming them
+| would break every deployment for no benefit.
+|
+*/
+
 use Amid\Sms\Drivers\IpPanelDriver;
 use Amid\Sms\Drivers\KavenegarDriver;
 use Amid\Sms\Drivers\LogDriver;
@@ -29,6 +58,53 @@ return [
     */
 
     'enabled' => env('SMS_ENABLED', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Table names
+    |--------------------------------------------------------------------------
+    |
+    | The five tables this package owns. Leave them alone and they keep the names
+    | they have always had; every one of these defaults is the original name.
+    |
+    | ⚠️ **Set these BEFORE running this package's migrations for the first time.**
+    | This is a schema mapping, decided once at installation. Changing a name
+    | afterwards renames nothing: the package simply starts looking for a table
+    | that is not there, and the rows stay where they were. Moving an installed
+    | schema is a migration the application writes for itself.
+    |
+    | You need this if the application already owns a table called `sms_messages`
+    | or `sms_templates` — `Schema::create()` refuses a name that exists, so the
+    | first migration fails outright rather than merging into somebody else's data.
+    | Prefix the whole set and the collision goes away:
+    |
+    |     'gateways'          => 'sms_core_gateways',
+    |     'templates'         => 'sms_core_templates',
+    |     'template_gateways' => 'sms_core_template_gateways',
+    |     'messages'          => 'sms_core_messages',
+    |     'attempts'          => 'sms_core_attempts',
+    |
+    | ⚠️ Deliberately not read from env(). Every other setting in this file is a
+    | per-deployment choice; a table name is not. Two environments disagreeing
+    | about the master switch is configuration, two environments disagreeing about
+    | which table holds the messages is two different schemas — and the second one
+    | is found out by a migration that ran against the wrong table in production.
+    |
+    | ⚠️ A name must be non-empty, unpadded, unique within this list, free of dots
+    | and quotes, and at most 30 characters. The length is not about table names:
+    | Laravel builds INDEX names out of them, MySQL allows 64 for those too, and
+    | the longest index here adds 34. An invalid name throws rather than falling
+    | back — see Amid\Sms\Exceptions\InvalidTableConfiguration.
+    |
+    */
+
+    'tables' => [
+        'gateways' => 'sms_gateways',
+        'templates' => 'sms_templates',
+        'template_gateways' => 'sms_template_gateways',
+        'messages' => 'sms_messages',
+        'attempts' => 'sms_attempts',
+    ],
 
     /*
     |--------------------------------------------------------------------------

@@ -8,6 +8,7 @@ use Amid\Sms\Contracts\PhoneNormalizer;
 use Amid\Sms\Enums\CountryPolicy;
 use Amid\Sms\Exceptions\InvalidCountryCoverage;
 use Amid\Sms\Gateways\GatewayConfig;
+use Amid\Sms\Support\TableNames;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -26,7 +27,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class SmsGateway extends Model
 {
-    protected $table = 'sms_gateways';
 
     protected $fillable = [
         'key', 'label', 'driver', 'sender', 'is_enabled', 'priority', 'options',
@@ -59,6 +59,25 @@ class SmsGateway extends Model
             'is_enabled' => 'boolean',
             'priority' => 'integer',
         ];
+    }
+
+    /**
+     * ⚠️ Resolved through `getTable()` rather than declared in `$table`, and every
+     * model in this package does the same.
+     *
+     * A `protected $table = '…'` is read once when the class is loaded, so it
+     * cannot answer to configuration; `getTable()` is asked on every query, which
+     * is what makes a configured name reach relations, eager loads, joins and
+     * anything Eloquent builds on its own. It also keeps the name out of the
+     * serialized model on a queue — a job encoded under one table map and run under
+     * another would otherwise write to whichever table it remembered.
+     *
+     * `$this->table` is still honoured when something has set it explicitly, so
+     * `setTable()` and a host subclass both behave exactly as Eloquent documents.
+     */
+    public function getTable(): string
+    {
+        return $this->table ?? TableNames::gateways();
     }
 
     public function templateBindings(): HasMany

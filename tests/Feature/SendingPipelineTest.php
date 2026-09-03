@@ -116,7 +116,7 @@ it('does not deliver again after an uncertain result', function () {
 it('records the message and sends nothing when the master switch is off', function () {
     // The line that protects a staging machine running against a restored
     // production database: real customers, real numbers, no messages.
-    config()->set('sms.enabled', false);
+    config()->set('laravel-sms.enabled', false);
     Queue::fake();
     Http::fake();
 
@@ -136,9 +136,9 @@ it('is switched off by default', function () {
     // Gateways live in the database now, so a restored dump arrives complete with
     // working credentials. Sending has to be opted into by an environment rather
     // than inherited from a database.
-    expect(config()->get('sms.enabled'))->toBeTrue();
+    expect(config()->get('laravel-sms.enabled'))->toBeTrue();
 
-    $default = require __DIR__.'/../../config/sms.php';
+    $default = require __DIR__.'/../../config/laravel-sms.php';
 
     expect($default['enabled'])->toBeFalse();
 });

@@ -1,5 +1,6 @@
 <?php
 
+use Amid\Sms\Support\TableNames;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -17,10 +18,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('sms_attempts', function (Blueprint $table) {
+        Schema::create(TableNames::attempts(), function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('sms_message_id')->constrained('sms_messages')->cascadeOnDelete();
+            $table->foreignId('sms_message_id')->constrained(TableNames::messages())->cascadeOnDelete();
 
             /*
              * Which gateway - and, beside it, its key and driver as plain text.
@@ -30,7 +31,7 @@ return new class extends Migration
              * answerable after that provider has been removed.
              */
             $table->foreignId('sms_gateway_id')->nullable()
-                ->constrained('sms_gateways')->nullOnDelete();
+                ->constrained(TableNames::gateways())->nullOnDelete();
             $table->string('gateway_key');
             $table->string('driver');
 
@@ -153,6 +154,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('sms_attempts');
+        Schema::dropIfExists(TableNames::attempts());
     }
 };

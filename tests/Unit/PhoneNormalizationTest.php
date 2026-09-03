@@ -27,7 +27,7 @@ it('uses the configured default region for national input', function () {
     // A bare national number means nothing without a region. The same digits are a
     // different country's number under a different default, which is exactly why
     // the region is configuration rather than a constant.
-    config()->set('sms.phone.default_region', 'GB');
+    config()->set('laravel-sms.phone.default_region', 'GB');
     app()->forgetInstance(PhoneNormalizer::class);
 
     $british = app(PhoneNormalizer::class)->normalize('07400123456');
@@ -38,7 +38,7 @@ it('uses the configured default region for national input', function () {
 });
 
 it('reads a number with an explicit country code regardless of the default region', function () {
-    config()->set('sms.phone.default_region', 'GB');
+    config()->set('laravel-sms.phone.default_region', 'GB');
     app()->forgetInstance(PhoneNormalizer::class);
 
     $number = app(PhoneNormalizer::class)->normalize('+989121234567');
@@ -86,7 +86,7 @@ it('accepts a valid non-mobile number by default', function () {
 });
 
 it('refuses a non-mobile number only when the application opts in', function () {
-    config()->set('sms.phone.require_mobile', true);
+    config()->set('laravel-sms.phone.require_mobile', true);
     app()->forgetInstance(PhoneNormalizer::class);
 
     expect(app(PhoneNormalizer::class)->normalize('02188776655'))->toBeNull()
@@ -97,7 +97,7 @@ it('refuses a non-mobile number only when the application opts in', function () 
 it('still refuses structurally invalid numbers with the mobile requirement off', function () {
     // The default must not be mistaken for "accept anything". E.164 validity is
     // checked either way.
-    expect(config()->get('sms.phone.require_mobile'))->toBeFalse();
+    expect(config()->get('laravel-sms.phone.require_mobile'))->toBeFalse();
 
     expect(app(PhoneNormalizer::class)->normalize('0912123'))->toBeNull()
         ->and(app(PhoneNormalizer::class)->normalize('not a phone'))->toBeNull();

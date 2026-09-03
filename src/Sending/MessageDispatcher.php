@@ -68,7 +68,12 @@ final class MessageDispatcher
      *                          nowhere to retry from
      * @return SendResult|null  null when nothing was attempted at all
      */
-    public function attempt(SmsMessage $message, array $variables, bool $mayRetry = false): ?SendResult
+    /**
+     * @param  int|null  $viaGatewayId  pin this send to one gateway. ⚠️ See
+     *                                  PendingMessage::viaGateway() for the whole
+     *                                  of what pinning means and does not mean.
+     */
+    public function attempt(SmsMessage $message, array $variables, bool $mayRetry = false, ?int $viaGatewayId = null): ?SendResult
     {
         if ($message->isSettled()) {
             // Somebody else finished this message while this call was in flight.
@@ -93,7 +98,7 @@ final class MessageDispatcher
          * sits in the log beside the attempts it produced.
          */
         $candidates = $this->eligible(
-            $this->router->candidatesFor($template, $message->country_code),
+            $this->router->candidatesFor($template, $message->country_code, $viaGatewayId),
             $message,
         );
 
@@ -103,9 +108,36 @@ final class MessageDispatcher
             // configured for this destination's country, or has already refused it
             // definitively. Recorded on the row where an operator can see it rather
             // than thrown at whoever happened to trigger it.
-            $message->transitionTo(MessageStatus::Failed, 'No eligible gateway can carry this message.');
+            //
+            // ⚠️ A pinned send says so, because "no gateway can carry this" and "the
+            // ONE gateway you asked about cannot carry this" are different findings,
+            // and the second is the entire answer somebody pressed a button for.
+            $message->transitionTo(MessageStatus::Failed, $viaGatewayId === null
+                ? 'No eligible gateway can carry this message.'
+                : 'The gateway this message was pinned to cannot carry it.');
 
             return null;
+        }
+
+        if ($viaGatewayId !== null) {
+            /*
+             * ⚠️ **A pinned send does not reach the planner at all**, and that is the
+             * whole of the routing-state guarantee.
+             *
+             * The planner is where round-robin and weighted round-robin advance their
+             * shared cursor, and advancing it here would let a test send move
+             * production traffic's position in the rotation - one operator pressing a
+             * button in an admin panel would change which gateway the next real
+             * customer message went to. There is also nothing for a strategy to
+             * decide: the list holds one gateway, chosen by a person, and a selection
+             * strategy exists to choose between several.
+             *
+             * The intent column is still written, because it is true and because the
+             * message screen reads it: this send was aimed at this gateway.
+             */
+            $message->routing_gateway_id = $viaGatewayId;
+
+            return $this->walk($message, $candidates, $variables, $mayRetry, pinned: true);
         }
 
         /*
@@ -142,6 +174,24 @@ final class MessageDispatcher
             $message->routing_gateway_id = $plan->primaryGatewayId;
         }
 
+        return $this->walk($message, $candidates, $variables, $mayRetry, pinned: false);
+    }
+
+    /**
+     * Walk the chain, in the order it was given, and settle the message.
+     *
+     * Extracted so that an ordinary send and a pinned one reach byte-identical
+     * handling of everything a provider actually says. ⚠️ Pinning is a decision
+     * about WHICH gateways are in the list, taken before this method is called, and
+     * `$pinned` reaches here only to word two of our own messages - it changes no
+     * rule about acceptance, uncertainty, failover or health. A chain of one is
+     * walked by the same loop as a chain of four.
+     *
+     * @param  list<GatewayCandidate>  $candidates
+     * @param  array<string, mixed>  $variables
+     */
+    private function walk(SmsMessage $message, array $candidates, array $variables, bool $mayRetry, bool $pinned): ?SendResult
+    {
         $message->transitionTo(MessageStatus::Sending);
 
         $result = null;
@@ -241,10 +291,22 @@ final class MessageDispatcher
                 return null;
             }
 
-            $message->transitionTo(
-                MessageStatus::Failed,
-                'Every gateway that could carry this message is temporarily unavailable.',
-            );
+            /*
+             * ⚠️ A pinned send is NOT allowed through an open circuit, and is told
+             * so in as many words.
+             *
+             * The temptation is real - somebody pressed a button precisely because
+             * they want to know whether this gateway works now - and it is refused
+             * anyway. The circuit is open because this application's own recent
+             * evidence says the gateway is not answering, and a management layer
+             * that quietly ignored that would be a management layer whose test
+             * result means something different from what production does. Resetting
+             * the circuit is a separate, deliberate, visible act; it is not
+             * something a test button does on somebody's behalf.
+             */
+            $message->transitionTo(MessageStatus::Failed, $pinned
+                ? 'The gateway this message was pinned to is temporarily unavailable: its circuit is open.'
+                : 'Every gateway that could carry this message is temporarily unavailable.');
 
             return null;
         }

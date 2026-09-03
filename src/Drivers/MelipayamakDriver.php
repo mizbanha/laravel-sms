@@ -42,19 +42,27 @@ use Illuminate\Http\Client\Response;
  * `RetStatus` is the envelope's own verdict — the documented success example is
  * `{"Value": "...", "RetStatus": 1, "StrRetStatus": "Ok"}` — and it reports that
  * the CALL worked, not that the message was accepted. The method's own answer is
- * in `Value`, which is either the recId of a successful send or one of an
- * enumerated set of error numbers. **Many of those error numbers are POSITIVE** —
+ * in `Value`, which is the recId of a successful send, one of an enumerated set of
+ * error numbers, or — on `SendSMS` alone — the bare acknowledgement `1`, which
+ * reports success and is not an id. **Many of those error numbers are POSITIVE** —
  * 2, 3, 6, 10, 17, 18, 35 and more — so `{"RetStatus": 1, "Value": 18}` is a
  * well-formed response meaning "the recipient number is invalid". Reading either
  * field alone records a message as sent that never left.
  *
  * ⚠️ **The two operations have DIFFERENT documented return codes, and this driver
  * treats them separately.** `SendSMS` documents 3, 4, 5, 9, 14 and 15, which
- * `BaseServiceNumber` does not; `BaseServiceNumber` documents -111, -10, -7, -6,
- * -5, -4, -3, -2, -1 and 19, which `SendSMS` does not. Applying one table to the
- * other endpoint would attach the wrong meaning to a real code. The two lists
- * below are the vendor's current per-method tables, read from
- * `melipayamak.com/api/sendsimplesms2/` and `melipayamak.com/api/sendbybasenumber2/`.
+ * `BaseServiceNumber` does not; `BaseServiceNumber` documents -10, -7, -6, -5, -4,
+ * -3, -2, -1 and 19, which `SendSMS` does not. Applying one table to the other
+ * endpoint would attach the wrong meaning to a real code. The two lists below are
+ * the vendor's per-method tables, read from `melipayamak.com/api/sendsimplesms2/`
+ * and `melipayamak.com/api/sendbybasenumber2/`, and corrected against the vendor's
+ * own PDF guides (`webservice-rest`, `webservice-SharedNumber`).
+ *
+ * ⚠️ **Separate does not mean disjoint**, and reading it that way is what those
+ * guides caught. The four address codes -111, -110, -109 and -108 are documented
+ * for BOTH endpoints; this driver had -111 on the pattern side only, so a text
+ * send refused for an unauthorised IP was treated as an outcome the provider does
+ * not document — and an undocumented outcome is never failed over.
  *
  * ⚠️ **Only the pattern endpoint documents a recId shape**: "در صورت دریافت
  * (recId) یک عدد بیش از 15 رقم به معنای ارسال موفق بوده" — more than 15 digits
@@ -191,13 +199,22 @@ final class MelipayamakDriver implements Driver
     /**
      * The codes `SendSMS` documents. Nothing outside this list is a known text
      * error.
+     *
+     * ⚠️ **`-111` belongs here and was missing.** The vendor's REST guide lists it
+     * for this endpoint — "IP درخواست کننده نامعتبر است" — and an earlier pass had
+     * it in the pattern list only. The cost was not a missing translation: an
+     * undocumented code falls through to `unknown()`, which is deliberately
+     * conservative and never fails over, so a text send refused because this
+     * server's address is not on the account's API allowlist stopped dead at the
+     * first gateway. An allowlist is per-ACCOUNT, which makes it exactly the kind
+     * of condition the next gateway does not share.
      */
-    private const TEXT_CODES = [-110, -109, -108, 0, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 17, 18, 35];
+    private const TEXT_CODES = [-111, -110, -109, -108, 0, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 17, 18, 35];
 
     /**
      * The codes `BaseServiceNumber` documents. Note what is absent as much as what
-     * is present: no 3, 4, 5, 9, 14 or 15 here, and no -111, -10, -7, -6, -5, -4,
-     * -3, -2, -1 or 19 in the text list.
+     * is present: no 3, 4, 5, 9, 14 or 15 here, and no -10, -7, -6, -5, -4, -3, -2,
+     * -1 or 19 in the text list.
      */
     private const PATTERN_CODES = [-111, -110, -109, -108, -10, -7, -6, -5, -4, -3, -2, -1, 0, 2, 6, 7, 10, 11, 12, 16, 17, 18, 19, 35];
 
@@ -224,6 +241,27 @@ final class MelipayamakDriver implements Driver
      * time by another gateway.
      */
     private const PATTERN_RECORD_ID_DIGITS = 15;
+
+    /**
+     * `SendSMS` documents `1` as an outcome in its own right — "درخواست با موفقیت
+     * انجام شد", the request was carried out successfully — listed among the recIds
+     * and the error numbers rather than beside them.
+     *
+     * ⚠️ **It is an acknowledgement, not an identifier**, and the difference is the
+     * whole reason this constant exists. `isRecordId()` accepts any positive number
+     * this endpoint does not document as an error, so `1` was previously accepted
+     * AS a recId and stored as the message id. The send outcome was right and the
+     * id was fiction: `GetDeliveries2` takes a recID, and asking it about message
+     * number 1 answers about somebody else's message or about nothing.
+     *
+     * So the message is accepted, as the provider says, and carries no provider id
+     * at all — which is the truthful record of what this response contains.
+     *
+     * ⚠️ Text only. `BaseServiceNumber` publishes no such sentinel, and its
+     * successful values are longer than fifteen digits; a bare `1` from the pattern
+     * endpoint is an outcome the vendor does not document and stays a refusal.
+     */
+    private const TEXT_ACKNOWLEDGEMENT = '1';
 
     public function __construct(private readonly GatewayConfig $config) {}
 
@@ -357,9 +395,12 @@ final class MelipayamakDriver implements Driver
     /**
      * Read the provider's answer, for the operation that asked the question.
      *
-     * Two gates, in order: the envelope has to say Ok, and `Value` has to be a
-     * recId for THIS endpoint rather than one of the numbers it documents as
-     * errors.
+     * Two gates, in order: the envelope has to say Ok, and `Value` has to be
+     * evidence of a send for THIS endpoint rather than one of the numbers it
+     * documents as errors.
+     *
+     * That evidence comes in two shapes, and only one of them is an identifier.
+     * See TEXT_ACKNOWLEDGEMENT for the other.
      */
     private function interpret(Response $response, DeliveryMode $mode): SendResult
     {
@@ -369,11 +410,20 @@ final class MelipayamakDriver implements Driver
         $status = data_get($payload, 'RetStatus') ?? data_get($payload, 'retStatus');
         $code = $this->code(data_get($payload, 'Value') ?? data_get($payload, 'value'));
 
-        if ((int) $status === self::OK && $code !== null && $this->isRecordId($code, $mode)) {
-            // As a string. It is an identifier a later GetDeliveries2 lookup quotes
-            // back, not a quantity, and casting a 19-digit id to an int is how it
-            // becomes a different id.
-            return SendResult::accepted($code, $this->sanitized($payload));
+        if ((int) $status === self::OK && $code !== null) {
+            if ($mode === DeliveryMode::Text && $code === self::TEXT_ACKNOWLEDGEMENT) {
+                // Accepted, and deliberately with no id. Inventing one out of a
+                // success sentinel is how a delivery lookup ends up asking about a
+                // message that is not this one.
+                return SendResult::accepted(null, $this->sanitized($payload));
+            }
+
+            if ($this->isRecordId($code, $mode)) {
+                // As a string. It is an identifier a later GetDeliveries2 lookup
+                // quotes back, not a quantity, and casting a 19-digit id to an int
+                // is how it becomes a different id.
+                return SendResult::accepted($code, $this->sanitized($payload));
+            }
         }
 
         return $this->refusal($code, $status, $payload, $mode);
@@ -431,6 +481,11 @@ final class MelipayamakDriver implements Driver
         }
 
         /*
+         * ⚠️ `1` never arrives here: `interpret()` has already answered it as an
+         * acknowledgement. It is the one value this endpoint's page lists that is
+         * neither an error nor an id, so it is handled before the question "is this
+         * an id?" is asked rather than inside it.
+         *
          * ⚠️ This endpoint's OWN table, and nothing else.
          *
          * An earlier pass excluded the union of both tables here, reasoning that a

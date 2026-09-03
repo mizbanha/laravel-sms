@@ -8,6 +8,7 @@ use Amid\Sms\Enums\DeliveryMode;
 use Amid\Sms\Enums\DeliveryStatus;
 use Amid\Sms\Enums\FailureKind;
 use Amid\Sms\Enums\SendOutcome;
+use Amid\Sms\Support\TableNames;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -36,7 +37,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class SmsAttempt extends Model
 {
-    protected $table = 'sms_attempts';
 
     protected $guarded = ['id'];
 
@@ -53,6 +53,16 @@ class SmsAttempt extends Model
             'delivery_checked_at' => 'datetime',
             'delivery_confirmed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * ⚠️ Resolved on every query rather than declared in `$table`, so a configured
+     * name reaches relations, eager loads and queued jobs. See `SmsGateway` for the
+     * full reasoning, and `Amid\Sms\Support\TableNames` for the map.
+     */
+    public function getTable(): string
+    {
+        return $this->table ?? TableNames::attempts();
     }
 
     public function message(): BelongsTo

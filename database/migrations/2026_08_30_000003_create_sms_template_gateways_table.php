@@ -1,5 +1,6 @@
 <?php
 
+use Amid\Sms\Support\TableNames;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -19,11 +20,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('sms_template_gateways', function (Blueprint $table) {
+        Schema::create(TableNames::templateGateways(), function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('sms_template_id')->constrained('sms_templates')->cascadeOnDelete();
-            $table->foreignId('sms_gateway_id')->constrained('sms_gateways')->cascadeOnDelete();
+            $table->foreignId('sms_template_id')->constrained(TableNames::templates())->cascadeOnDelete();
+            $table->foreignId('sms_gateway_id')->constrained(TableNames::gateways())->cascadeOnDelete();
 
             // text or pattern. A string, never a native enum, so adding a case is a
             // code change rather than a schema migration on every consumer - and so
@@ -84,14 +85,27 @@ return new class extends Migration
 
             $table->timestamps();
 
-            // One binding per pairing. Two would be two answers to the question
-            // "how does this message go out through this gateway".
-            $table->unique(['sms_template_id', 'sms_gateway_id'], 'sms_template_gateway_unique');
+            /*
+             * One binding per pairing. Two would be two answers to the question
+             * "how does this message go out through this gateway".
+             *
+             * ⚠️ The index name is derived from the configured table, not written
+             * out. Laravel's own generated name for these two columns would be
+             * `{table}_sms_template_id_sms_gateway_id_unique` — 45 characters of
+             * suffix, which overruns MySQL's 64-character identifier limit for any
+             * table name longer than 19. Hence an explicit name; and hence it has
+             * to follow the table, or an installation with custom names would carry
+             * an index called after a table it does not have.
+             */
+            $table->unique(
+                ['sms_template_id', 'sms_gateway_id'],
+                TableNames::templateGateways().'_unique',
+            );
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('sms_template_gateways');
+        Schema::dropIfExists(TableNames::templateGateways());
     }
 };

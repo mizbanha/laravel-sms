@@ -178,7 +178,7 @@ it('needs no shared routing state for a priority template', function () {
     // must not even look at it.
     Cache::extend('nolock', fn ($app): Repository => Cache::repository(new UnlockableStore));
     config()->set('cache.stores.nolock', ['driver' => 'nolock']);
-    config()->set('sms.routing.store', 'nolock');
+    config()->set('laravel-sms.routing.store', 'nolock');
 
     Log::spy();
 
@@ -194,7 +194,7 @@ it('needs no shared routing state for a priority template', function () {
 it('falls back to priority, loudly, when the cache store cannot lock', function () {
     Cache::extend('nolock', fn ($app): Repository => Cache::repository(new UnlockableStore));
     config()->set('cache.stores.nolock', ['driver' => 'nolock']);
-    config()->set('sms.routing.store', 'nolock');
+    config()->set('laravel-sms.routing.store', 'nolock');
 
     Log::spy();
 
@@ -214,8 +214,12 @@ it('falls back to priority, loudly, when the cache store cannot lock', function 
     expect(strategyPrimaries(3))->toBe(['first', 'first', 'first']);
 
     Log::shouldHaveReceived('error')
+        // ⚠️ The FULL key, and it has to be. `str_contains` on the old
+        // `sms.routing.store` is satisfied by `laravel-sms.routing.store` as a
+        // substring, so this assertion silently survived the namespace move
+        // without proving the message had been updated.
         ->withArgs(fn (string $message): bool => str_contains($message, 'fell back to priority order')
-            && str_contains($message, 'sms.routing.store'))
+            && str_contains($message, 'laravel-sms.routing.store'))
         ->once();
 });
 

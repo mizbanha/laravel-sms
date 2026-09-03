@@ -328,7 +328,7 @@ final class OtpManager
 
     private function cache(): Repository
     {
-        return Cache::store(config('sms.otp.store') ?? config('sms.lock.store'));
+        return Cache::store(config('laravel-sms.otp.store') ?? config('laravel-sms.lock.store'));
     }
 
     /**
@@ -341,19 +341,19 @@ final class OtpManager
     private function config(): array
     {
         $config = [
-            'length' => (int) config('sms.otp.length', 6),
-            'expires' => (int) config('sms.otp.expires', 180),
-            'resend_after' => (int) config('sms.otp.resend_after', 90),
-            'max_attempts' => (int) config('sms.otp.max_attempts', 5),
+            'length' => (int) config('laravel-sms.otp.length', 6),
+            'expires' => (int) config('laravel-sms.otp.expires', 180),
+            'resend_after' => (int) config('laravel-sms.otp.resend_after', 90),
+            'max_attempts' => (int) config('laravel-sms.otp.max_attempts', 5),
         ];
 
         return match (true) {
             $config['length'] < 4 || $config['length'] > 10 => throw new SmsException(
-                'sms.otp.length must be between 4 and 10 digits.',
+                'laravel-sms.otp.length must be between 4 and 10 digits.',
             ),
-            $config['expires'] < 1 => throw new SmsException('sms.otp.expires must be at least one second.'),
-            $config['resend_after'] < 0 => throw new SmsException('sms.otp.resend_after cannot be negative.'),
-            $config['max_attempts'] < 1 => throw new SmsException('sms.otp.max_attempts must be at least one.'),
+            $config['expires'] < 1 => throw new SmsException('laravel-sms.otp.expires must be at least one second.'),
+            $config['resend_after'] < 0 => throw new SmsException('laravel-sms.otp.resend_after cannot be negative.'),
+            $config['max_attempts'] < 1 => throw new SmsException('laravel-sms.otp.max_attempts must be at least one.'),
             default => $config,
         };
     }

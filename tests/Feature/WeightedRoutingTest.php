@@ -10,6 +10,7 @@ use Amid\Sms\Models\SmsGateway;
 use Amid\Sms\Models\SmsMessage;
 use Amid\Sms\Models\SmsTemplate;
 use Amid\Sms\Models\SmsTemplateGateway;
+use Amid\Sms\Support\TableNames;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
@@ -187,7 +188,7 @@ it('survives a hand-edited weight of zero instead of dividing by nothing', funct
     wrrBind($template, 'b');
 
     // Straight past the model, the way a SQL console or a bad import would arrive.
-    DB::table('sms_template_gateways')->update(['weight' => 0]);
+    DB::table(TableNames::templateGateways())->update(['weight' => 0]);
 
     /*
      * ⚠️ The column is validated on write and cannot be zero, so this is defence

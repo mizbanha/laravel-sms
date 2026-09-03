@@ -7,6 +7,7 @@ namespace Amid\Sms\Models;
 use Amid\Sms\Enums\DeliveryStatus;
 use Amid\Sms\Enums\MessageStatus;
 use Amid\Sms\Enums\SendOutcome;
+use Amid\Sms\Support\TableNames;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -40,7 +41,6 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class SmsMessage extends Model
 {
-    protected $table = 'sms_messages';
 
     protected $guarded = ['id'];
 
@@ -59,6 +59,16 @@ class SmsMessage extends Model
             'delivery_status' => DeliveryStatus::class,
             'delivery_confirmed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * ⚠️ Resolved on every query rather than declared in `$table`, so a configured
+     * name reaches relations, eager loads and queued jobs. See `SmsGateway` for the
+     * full reasoning, and `Amid\Sms\Support\TableNames` for the map.
+     */
+    public function getTable(): string
+    {
+        return $this->table ?? TableNames::messages();
     }
 
     public function template(): BelongsTo

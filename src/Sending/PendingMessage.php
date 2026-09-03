@@ -6,9 +6,12 @@ namespace Amid\Sms\Sending;
 
 use Amid\Sms\Contracts\PhoneNormalizer;
 use Amid\Sms\Enums\MessageStatus;
+use Amid\Sms\Exceptions\GatewayNotConfigured;
 use Amid\Sms\Exceptions\InvalidRecipient;
+use Amid\Sms\Exceptions\SmsException;
 use Amid\Sms\Exceptions\TemplateNotFound;
 use Amid\Sms\Jobs\SendSmsMessage;
+use Amid\Sms\Models\SmsGateway;
 use Amid\Sms\Models\SmsMessage;
 use Amid\Sms\Models\SmsTemplate;
 use Amid\Sms\Templates\TemplateRenderer;
@@ -58,6 +61,15 @@ final class PendingMessage
      * marked, and nothing can lower one whose template was. See sensitive().
      */
     private bool $forceSensitive = false;
+
+    /**
+     * The one gateway this send is pinned to, if it is pinned at all.
+     *
+     * ⚠️ Held as the resolved model rather than a key, so an unknown gateway fails
+     * at the call site where somebody can still fix it, not several steps later
+     * inside routing where it would look like a configuration problem.
+     */
+    private ?SmsGateway $gateway = null;
 
     public function __construct(
         private readonly PhoneNormalizer $normalizer,
@@ -134,10 +146,85 @@ final class PendingMessage
     }
 
     /**
+     * Pin this send to one gateway, by model or by key.
+     *
+     *     Sms::to($number)->template('connectivity-check')
+     *        ->viaGateway('kavenegar-main')
+     *        ->send();
+     *
+     * The question it answers is "does THIS gateway work", which ordinary sending
+     * deliberately cannot be asked: routing exists to pick a gateway, and every
+     * mechanism in this package is built to move a message away from one that is
+     * failing. A management layer needs the opposite, and needs it without lying
+     * about anything.
+     *
+     * ⚠️ **A pinned send is an ordinary send with a narrower candidate list.** It is
+     * not a mode, a simulation or a bypass. Everything still applies, in the same
+     * order, decided by the same code: the master switch, phone normalisation, the
+     * country the gateway is configured to serve, the gateway's enabled state, the
+     * binding's enabled state and completeness, the capability the binding's mode
+     * requires, the circuit breaker, parameter mapping, the sensitive-message
+     * policy, credential protection, and the SmsMessage and SmsAttempt rows that
+     * record what happened. The result is classified exactly as any other send's is.
+     *
+     * ⚠️ **It never fails over.** The candidate list holds at most this gateway, so
+     * there is nothing else to try - by construction, not by a rule somebody has to
+     * remember. If the pinned gateway is ineligible, unusable, circuit-open or
+     * simply refuses, that IS the answer, and it is recorded as such. Quietly
+     * proving a different gateway would answer a question nobody asked.
+     *
+     * ⚠️ **It never touches routing state.** Round-robin and weighted round-robin
+     * cursors are not read and not advanced, no slot is consumed, and the share
+     * production traffic receives is unchanged. A test in an admin panel must not
+     * be able to move a real customer's message to another provider.
+     *
+     * ⚠️ **It never bypasses an open circuit.** A gateway this application's own
+     * recent evidence says is not answering stays skipped, and the send settles
+     * saying exactly that. Resetting a circuit is a separate deliberate act.
+     *
+     * ⚠️ **Synchronous only.** See queue().
+     *
+     * @throws GatewayNotConfigured when the key names no gateway, or the model was never saved
+     */
+    public function viaGateway(SmsGateway|string $gateway): self
+    {
+        if ($gateway instanceof SmsGateway) {
+            $this->gateway = $gateway->exists
+                ? $gateway
+                : throw GatewayNotConfigured::unsavedGateway();
+
+            return $this;
+        }
+
+        $this->gateway = SmsGateway::query()->where('key', trim($gateway))->first()
+            ?? throw GatewayNotConfigured::unknownGateway(trim($gateway));
+
+        return $this;
+    }
+
+    /**
      * Record the message and hand it to the queue.
      */
     public function queue(): SmsMessage
     {
+        if ($this->gateway !== null) {
+            /*
+             * ⚠️ Refused rather than silently unpinned.
+             *
+             * Pinning exists for one purpose - somebody is waiting to be told
+             * whether a gateway works - and a queued send answers nobody: the caller
+             * gets a queued row and the verdict arrives in a worker, minutes later,
+             * possibly on another machine. Carrying the pin through the job would
+             * mean a second set of routing semantics living in a serialised payload,
+             * for a feature whose only caller wants an answer now. A send that
+             * quietly forgot its pin and routed normally would be worse still: it
+             * would report success for a gateway that was never contacted.
+             */
+            throw new SmsException(
+                'A send pinned with viaGateway() is synchronous only. Call send() rather than queue().',
+            );
+        }
+
         $message = $this->record();
 
         if ($message->isSettled()) {
@@ -146,8 +233,8 @@ final class PendingMessage
         }
 
         SendSmsMessage::dispatch($message->getKey(), $this->variables)
-            ->onQueue((string) config('sms.queue.queue', 'sms'))
-            ->onConnection(config('sms.queue.connection'));
+            ->onQueue((string) config('laravel-sms.queue.queue', 'sms'))
+            ->onConnection(config('laravel-sms.queue.connection'));
 
         return $message;
     }
@@ -166,7 +253,12 @@ final class PendingMessage
             return $message;
         }
 
-        $this->dispatcher->attempt($message, $this->variables, mayRetry: false);
+        $this->dispatcher->attempt(
+            $message,
+            $this->variables,
+            mayRetry: false,
+            viaGatewayId: $this->gateway === null ? null : (int) $this->gateway->getKey(),
+        );
 
         return $message->refresh();
     }
@@ -231,6 +323,6 @@ final class PendingMessage
      */
     private function enabled(): bool
     {
-        return (bool) config('sms.enabled', false);
+        return (bool) config('laravel-sms.enabled', false);
     }
 }
