@@ -25,6 +25,19 @@ First public release candidate. Nothing has been tagged yet.
 
 ### Added
 
+- **`iranpayamak` driver**, against the OpenAPI specification published at `docs.iranpayamak.com`. Text
+  (`/ws/v1/sms/simple`) and pattern (`/ws/v1/sms/pattern`), authenticated with an `Api-Key` header.
+  Refusals are classified from the validation bag's FIELD NAMES rather than from the Persian sentences
+  beside them, which is what lets a recipient problem stop the chain while an unregistered pattern code
+  fails over. Two behaviours are worth knowing: `number_format` is required and the specification
+  contradicts itself about its values (`english | persian` on one endpoint, `en | fa` on the other, with
+  `english` in both examples), so it defaults to the long spelling and is settable per gateway via
+  `options.number_format`; and a destination that cannot match the published recipient schema `^09\d{9}$`
+  is refused **before the request is made**, as this gateway declining rather than as an invalid number, so
+  an international destination fails over to a gateway that can carry it instead of ending the chain.
+  ⚠️ **No delivery report**, deliberately: `/ws/v1/send_request/{id}/items` publishes its status vocabulary
+  in full but documents its response as a paged list of phonebooks, so the recipient and status fields do
+  not exist in the specification. The send request id is stored regardless.
 - **Configurable table names.** All five tables this package creates can be renamed from
   `config('laravel-sms.tables')` before the first migration, for an application that already owns a table called
   `sms_messages` or `sms_templates`. The defaults are exactly the names this package has always used, so
@@ -45,9 +58,9 @@ First public release candidate. Nothing has been tagged yet.
 - **Provider-neutral send pipeline.** One logical message, recorded before anything
   is sent, delivered synchronously or through the queue, with a structured result
   rather than a boolean and a string.
-- **Six drivers.** `log` (writes to a log channel, contacts nobody), Kavenegar,
-  SMS.ir, IPPanel and Melipayamak for Iran, and Twilio for international
-  destinations.
+- **Seven drivers.** `log` (writes to a log channel, contacts nobody), Kavenegar,
+  SMS.ir, IPPanel, Melipayamak and IranPayamak for Iran, and Twilio for
+  international destinations.
 - **Runtime-configurable gateways.** Driver, sender, priority, enabled state,
   per-driver options and credentials live in the database and are editable without
   a deployment. Credentials are encrypted at rest and kept out of logs, dumps,

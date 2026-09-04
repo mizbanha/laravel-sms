@@ -5,9 +5,9 @@ the database and are editable at runtime; providers are code.
 
 **Status: M9.** One templated message, routed to the gateways that serve its destination country by one
 of three selection strategies, failed over across them, recorded as a message plus one attempt per
-handover, synchronously or through the queue, with a structured result. Drivers: Kavenegar, SMS.ir, IPPanel and
-Melipayamak (Iranian), Twilio (international), plus `log`, which writes to a log channel and contacts
-nobody. Sensitive messages and package-owned OTP are built, delivery status can be refreshed from Twilio
+handover, synchronously or through the queue, with a structured result. Drivers: Kavenegar, SMS.ir, IPPanel,
+Melipayamak and IranPayamak (Iranian), Twilio (international), plus `log`, which writes to a log channel and
+contacts nobody. Sensitive messages and package-owned OTP are built, delivery status can be refreshed from Twilio
 and IPPanel, and a gateway that stops answering is skipped for a cooldown instead of costing every message
 a timeout. Webhooks and any administration UI are not built.
 
@@ -764,6 +764,55 @@ necessarily API-compatible with it; this driver serves another gateway only when
 exposes the same documented contract at a different address. A provider that has diverged needs its own
 driver, not a branch inside this one.
 
+## IranPayamak
+
+The `iranpayamak` driver targets the OpenAPI specification published at `docs.iranpayamak.com` and served
+from `https://api.iranpayamak.com`. Text (`/ws/v1/sms/simple`) and pattern (`/ws/v1/sms/pattern`).
+
+```php
+SmsGateway::create([
+    'key' => 'iranpayamak',
+    'label' => 'IranPayamak',
+    'driver' => 'iranpayamak',
+    'sender' => '2191307530',          // -> line_number, digits only
+    'priority' => 90,
+])->forceFill([
+    'credentials' => ['api_key' => '...'],   // sent as the Api-Key header
+    'is_enabled' => true,
+])->save();
+```
+
+Two things about this provider are worth knowing before you configure it.
+
+**Its specification contradicts itself about `number_format`,** which is a required field on both
+endpoints. The simple endpoint enumerates `english | persian`; the pattern schema enumerates `en | fa`
+while describing them as "english | persian" — and both published examples send `"english"`. That is the
+default here. If the live API disagrees, correct it per gateway rather than waiting for a release:
+
+```php
+$gateway->options = ['number_format' => 'fa'];
+```
+
+`options.url` overrides the base URL in the usual way.
+
+**A non-Iranian destination is refused before the request is made.** The published recipient schema is
+`^09\d{9}$` — an Iranian mobile and nothing else — so this line cannot carry an international
+destination at all. Left to the provider, a German number would come back as a `recipients` validation
+error, which this driver reads as `InvalidRecipient` and correctly refuses to fail over; that is the right
+answer for a malformed number and exactly the wrong one for a well-formed foreign one a Twilio gateway in
+the same chain can deliver. So the refusal is recorded as this gateway declining, safe to fail over, and
+nothing is sent.
+
+**Delivery reporting is not implemented, and the reason is the documentation.**
+`GET /ws/v1/send_request/{id}/items` publishes its status vocabulary in full, as a query filter —
+`not-started | in-queue | sent | send-failure | delivered | delivery-failure | delivery-undetermined |
+system-error | blacklist`. Its *response* schema is `ApiResultPagedPhonebook`: a paged list of phonebooks,
+with `id`, `title`, `records` and `attributes`. It is a copy-paste from the phonebook endpoints, so the two
+fields a report needs — the recipient and its status — are not documented anywhere. Guessing them out of a
+schema known to describe something else is how a dashboard claims delivery to numbers that were never
+reached. The send request id the provider returns *is* stored, so implementing this later is a mapping
+exercise against a corrected specification and touches nothing in the send path.
+
 ## Drivers
 
 What this package's drivers actually implement — not what the providers offer.
@@ -775,6 +824,7 @@ What this package's drivers actually implement — not what the providers offer.
 | `smsir` | ✅ | ✅ | — | Iranian accounts |
 | `ippanel` | ✅ | ✅ | ✅ | Iranian accounts; also serves API-compatible hosts via `options.url` |
 | `melipayamak` | ✅ | ✅ | — | Iranian accounts |
+| `iranpayamak` | ✅ | ✅ | — | Iranian accounts. ⚠️ **Iranian mobile recipients only**, refused before the request |
 | `twilio` | ✅ | — | ✅ | international. ⚠️ **cannot deliver to Iran** |
 
 ⚠️ **A blank is a statement about this package, not about the provider.** Several of these providers
@@ -788,6 +838,10 @@ publish more than is implemented here, and the difference is deliberate:
 - **Melipayamak** publishes a delivery lookup (`GetDeliveries2`) that is deliberately not implemented —
   this provider's documentation is method-specific and easy to misread, and two report implementations
   were enough to prove the abstraction.
+- **IranPayamak** publishes voice messages, peer-to-peer, keyword and Excel-driven sends, postal-code, LBS
+  and number-bank targeting, bulk geographic sends, phonebooks, remote pattern management, tickets and
+  orders. None of it is exposed. Its delivery report is absent for a different reason — the endpoint's
+  published response schema describes phonebooks, so the fields are not documented at all. See above.
 - **Provider-owned OTP** exists at several of these providers and is deliberately unused: a code that
   exists only inside one provider cannot fail over to another.
 

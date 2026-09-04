@@ -30,6 +30,7 @@
 */
 
 use Amid\Sms\Drivers\IpPanelDriver;
+use Amid\Sms\Drivers\IranPayamakDriver;
 use Amid\Sms\Drivers\KavenegarDriver;
 use Amid\Sms\Drivers\LogDriver;
 use Amid\Sms\Drivers\MelipayamakDriver;
@@ -135,6 +136,13 @@ return [
          * provider that has diverged needs its own driver.
          */
         'ippanel' => IpPanelDriver::class,
+        /*
+         * IranPayamak, against its published OpenAPI at docs.iranpayamak.com. Text
+         * and pattern; no delivery report, because the report endpoint's response
+         * schema in that specification is a copy-paste of the phonebook one and the
+         * per-recipient fields are therefore undocumented.
+         */
+        'iranpayamak' => IranPayamakDriver::class,
         /*
          * The international one. Twilio does NOT deliver to Iran - its own
          * documentation for error 21408 says so - so this is the gateway that

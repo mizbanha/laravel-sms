@@ -3,7 +3,7 @@
     "description": "A provider-neutral SMS delivery package for Laravel: runtime-configurable gateways, logical templates, per-gateway parameter mapping, structured delivery results, message and attempt auditing.",
     "type": "library",
     "license": "MIT",
-    "keywords": ["laravel", "sms", "otp", "gateway", "failover", "kavenegar", "sms.ir", "ippanel", "melipayamak", "twilio"],
+    "keywords": ["laravel", "sms", "otp", "gateway", "failover", "kavenegar", "sms.ir", "ippanel", "melipayamak", "iranpayamak", "twilio"],
     "homepage": "https://github.com/amidesfahani/laravel-sms",
     "support": {
         "issues": "https://github.com/amidesfahani/laravel-sms/issues",
