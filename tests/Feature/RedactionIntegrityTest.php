@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Enums\FailureKind;
-use Amid\Sms\Enums\SendOutcome;
-use Amid\Sms\Facades\Sms;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Enums\FailureKind;
+use Mizbanha\Sms\Enums\SendOutcome;
+use Mizbanha\Sms\Facades\Sms;
 use Illuminate\Support\Facades\Http;
 
 /**

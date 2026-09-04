@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Exceptions;
+namespace Mizbanha\Sms\Exceptions;
 
-use Amid\Sms\Support\TableNames;
+use Mizbanha\Sms\Support\TableNames;
 
 /**
  * A `sms.tables` entry that cannot be used as a table name.

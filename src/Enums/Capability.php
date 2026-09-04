@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Enums;
+namespace Mizbanha\Sms\Enums;
 
 /**
  * What a driver can actually do.

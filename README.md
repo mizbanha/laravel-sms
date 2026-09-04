@@ -1,4 +1,4 @@
-# amidesfahani/laravel-sms
+# mizbanha/laravel-sms
 
 A provider-neutral SMS package for Laravel. Gateways, templates and per-gateway parameter mapping live in
 the database and are editable at runtime; providers are code.
@@ -25,7 +25,7 @@ a store with no lock support at all is refused rather than silently permitted to
 ## Install
 
 ```bash
-composer require amidesfahani/laravel-sms
+composer require mizbanha/laravel-sms
 php artisan vendor:publish --tag=laravel-sms-config
 php artisan vendor:publish --tag=laravel-sms-migrations
 php artisan migrate
@@ -38,7 +38,7 @@ from `vendor`. The application therefore has one authoritative migration path an
 To publish both groups in one command instead, use:
 
 ```bash
-php artisan vendor:publish --provider="Amid\Sms\SmsServiceProvider"
+php artisan vendor:publish --provider="Mizbanha\Sms\SmsServiceProvider"
 ```
 
 Do not combine published migrations with a `migrate --path=vendor/...` workflow.
@@ -124,7 +124,7 @@ and write to it.
 ## Configure a gateway
 
 ```php
-use Amid\Sms\Models\SmsGateway;
+use Mizbanha\Sms\Models\SmsGateway;
 
 SmsGateway::create([
     'key' => 'kavenegar-main',
@@ -145,7 +145,7 @@ row — **no driver knows it exists**, and the same driver can serve one account
 thirty countries and another permitted to message one.
 
 ```php
-use Amid\Sms\Enums\CountryPolicy;
+use Mizbanha\Sms\Enums\CountryPolicy;
 
 // Everywhere. The default; a gateway that ignores this behaves as it always did.
 $gateway->country_policy = CountryPolicy::All;
@@ -184,9 +184,9 @@ the template/gateway pairing, so the same message can be a registered pattern at
 at another.
 
 ```php
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Models\SmsTemplate;
-use Amid\Sms\Models\SmsTemplateGateway;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Models\SmsTemplate;
+use Mizbanha\Sms\Models\SmsTemplateGateway;
 
 $template = SmsTemplate::create([
     'key' => 'order-created',
@@ -301,8 +301,8 @@ The package generates and verifies the code; a gateway only delivers it. That is
 fail over between providers** — a provider-generated code exists only inside that provider.
 
 ```php
-use Amid\Sms\Facades\Otp;
-use Amid\Sms\Otp\OtpStatus;
+use Mizbanha\Sms\Facades\Otp;
+use Mizbanha\Sms\Otp\OtpStatus;
 
 $result = Otp::send($phone, 'login-otp');
 
@@ -363,7 +363,7 @@ notion of a user. When to challenge somebody is your application's decision.
 ## Send
 
 ```php
-use Amid\Sms\Facades\Sms;
+use Mizbanha\Sms\Facades\Sms;
 
 Sms::to('09121234567')
     ->template('order-created')
@@ -455,8 +455,8 @@ gateway has answered, and the two are configured separately.
 different messages want different policies:
 
 ```php
-use Amid\Sms\Enums\RoutingStrategy;
-use Amid\Sms\Models\SmsTemplate;
+use Mizbanha\Sms\Enums\RoutingStrategy;
+use Mizbanha\Sms\Models\SmsTemplate;
 
 // A login code should start at the most reliable line, every single time.
 SmsTemplate::where('key', 'login-otp')->first()
@@ -606,7 +606,7 @@ failed once its attempts are spent.
 For a management layer:
 
 ```php
-$breaker = app(Amid\Sms\Health\CircuitBreaker::class);
+$breaker = app(Mizbanha\Sms\Health\CircuitBreaker::class);
 
 $breaker->status($gateway);   // state (closed|open|half_open), failures, openUntil
 $breaker->reset($gateway);    // clears the observation - and nothing else
@@ -651,7 +651,7 @@ displayed as one. `delivery_checked_at` on the attempt is the last time the prov
 
 Supported by `twilio` (polling the Message resource by SID) and `ippanel` (the recipient-level report by
 outbox id). Both declare `Capability::DeliveryReport` and implement
-`Amid\Sms\Contracts\ReportsDeliveryStatus`; every other driver leaves delivery null and needs no method
+`Mizbanha\Sms\Contracts\ReportsDeliveryStatus`; every other driver leaves delivery null and needs no method
 saying so.
 
 Rules worth knowing before you build on it:
@@ -902,9 +902,9 @@ write that follows the HTTP call, and makes every *knowable* ambiguity terminal 
 
 ## Adding a provider
 
-Implement `Amid\Sms\Contracts\Driver`, declare its capabilities, and register the class in
+Implement `Mizbanha\Sms\Contracts\Driver`, declare its capabilities, and register the class in
 `config('laravel-sms.drivers')`. If the provider can report delivery, also implement
-`Amid\Sms\Contracts\ReportsDeliveryStatus` and declare `Capability::DeliveryReport` — both together or
+`Mizbanha\Sms\Contracts\ReportsDeliveryStatus` and declare `Capability::DeliveryReport` — both together or
 neither, so the capability stays a fact rather than a claim. A driver must not throw for provider behaviour; it translates its provider's
 vocabulary into a `SendResult`. Provider quirks — parameter limits, forbidden characters, an id buried in an
 odd place — belong inside the driver, never in calling code.
@@ -912,7 +912,7 @@ odd place — belong inside the driver, never in calling code.
 ### Asking what a driver can do
 
 ```php
-use Amid\Sms\Gateways\GatewayRegistry;
+use Mizbanha\Sms\Gateways\GatewayRegistry;
 
 app(GatewayRegistry::class)->registered();               // ['log', 'kavenegar', …]
 app(GatewayRegistry::class)->capabilitiesFor('twilio');  // [Capability::Text, Capability::DeliveryReport]

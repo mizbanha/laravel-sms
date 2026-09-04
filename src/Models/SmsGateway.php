@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Models;
+namespace Mizbanha\Sms\Models;
 
-use Amid\Sms\Contracts\PhoneNormalizer;
-use Amid\Sms\Enums\CountryPolicy;
-use Amid\Sms\Exceptions\InvalidCountryCoverage;
-use Amid\Sms\Gateways\GatewayConfig;
-use Amid\Sms\Support\TableNames;
+use Mizbanha\Sms\Contracts\PhoneNormalizer;
+use Mizbanha\Sms\Enums\CountryPolicy;
+use Mizbanha\Sms\Exceptions\InvalidCountryCoverage;
+use Mizbanha\Sms\Gateways\GatewayConfig;
+use Mizbanha\Sms\Support\TableNames;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;

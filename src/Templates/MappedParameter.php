@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Templates;
+namespace Mizbanha\Sms\Templates;
 
 /**
  * One pattern value, ready for one provider.

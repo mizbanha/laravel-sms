@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Enums\RoutingStrategy;
-use Amid\Sms\Exceptions\InvalidRoutingConfiguration;
-use Amid\Sms\Facades\Sms;
-use Amid\Sms\Models\SmsGateway;
-use Amid\Sms\Models\SmsMessage;
-use Amid\Sms\Models\SmsTemplate;
-use Amid\Sms\Models\SmsTemplateGateway;
-use Amid\Sms\Support\TableNames;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Enums\RoutingStrategy;
+use Mizbanha\Sms\Exceptions\InvalidRoutingConfiguration;
+use Mizbanha\Sms\Facades\Sms;
+use Mizbanha\Sms\Models\SmsGateway;
+use Mizbanha\Sms\Models\SmsMessage;
+use Mizbanha\Sms\Models\SmsTemplate;
+use Mizbanha\Sms\Models\SmsTemplateGateway;
+use Mizbanha\Sms\Support\TableNames;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Drivers\Concerns;
+namespace Mizbanha\Sms\Drivers\Concerns;
 
-use Amid\Sms\Enums\FailureKind;
-use Amid\Sms\Exceptions\GatewayNotConfigured;
-use Amid\Sms\Results\SendResult;
+use Mizbanha\Sms\Enums\FailureKind;
+use Mizbanha\Sms\Exceptions\GatewayNotConfigured;
+use Mizbanha\Sms\Results\SendResult;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;

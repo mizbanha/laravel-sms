@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms;
+namespace Mizbanha\Sms;
 
-use Amid\Sms\Contracts\OtpCodeGenerator;
-use Amid\Sms\Contracts\PhoneNormalizer;
-use Amid\Sms\Delivery\DeliveryTracker;
-use Amid\Sms\Gateways\GatewayRegistry;
-use Amid\Sms\Gateways\GatewayRouter;
-use Amid\Sms\Gateways\RoutingPlanner;
-use Amid\Sms\Health\CircuitBreaker;
-use Amid\Sms\Otp\OtpManager;
-use Amid\Sms\Otp\RandomOtpCodeGenerator;
-use Amid\Sms\Phone\LibPhoneNumberNormalizer;
-use Amid\Sms\Sending\MessageDispatcher;
-use Amid\Sms\Support\TableNames;
-use Amid\Sms\Templates\ParameterMapper;
-use Amid\Sms\Templates\TemplateRenderer;
+use Mizbanha\Sms\Contracts\OtpCodeGenerator;
+use Mizbanha\Sms\Contracts\PhoneNormalizer;
+use Mizbanha\Sms\Delivery\DeliveryTracker;
+use Mizbanha\Sms\Gateways\GatewayRegistry;
+use Mizbanha\Sms\Gateways\GatewayRouter;
+use Mizbanha\Sms\Gateways\RoutingPlanner;
+use Mizbanha\Sms\Health\CircuitBreaker;
+use Mizbanha\Sms\Otp\OtpManager;
+use Mizbanha\Sms\Otp\RandomOtpCodeGenerator;
+use Mizbanha\Sms\Phone\LibPhoneNumberNormalizer;
+use Mizbanha\Sms\Sending\MessageDispatcher;
+use Mizbanha\Sms\Support\TableNames;
+use Mizbanha\Sms\Templates\ParameterMapper;
+use Mizbanha\Sms\Templates\TemplateRenderer;
 use Illuminate\Support\ServiceProvider;
 
 class SmsServiceProvider extends ServiceProvider

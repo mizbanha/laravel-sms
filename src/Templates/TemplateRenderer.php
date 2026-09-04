@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Templates;
+namespace Mizbanha\Sms\Templates;
 
-use Amid\Sms\Exceptions\MissingVariables;
+use Mizbanha\Sms\Exceptions\MissingVariables;
 
 /**
  * Body plus values in, finished text out.

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Enums\FailureKind;
-use Amid\Sms\Enums\SendOutcome;
-use Amid\Sms\Facades\Sms;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Enums\FailureKind;
+use Mizbanha\Sms\Enums\SendOutcome;
+use Mizbanha\Sms\Facades\Sms;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
@@ -127,8 +127,8 @@ it('refuses a message the caller cannot fill in, before recording anything', fun
     // A caller mistake, thrown rather than recorded: it is a bug in the calling
     // code, and it is caught before a row exists or a provider is contacted.
     expect(fn () => Sms::to('09121234567')->template('order-created')->with([])->send())
-        ->toThrow(\Amid\Sms\Exceptions\MissingVariables::class);
+        ->toThrow(\Mizbanha\Sms\Exceptions\MissingVariables::class);
 
-    expect(\Amid\Sms\Models\SmsMessage::query()->count())->toBe(0);
+    expect(\Mizbanha\Sms\Models\SmsMessage::query()->count())->toBe(0);
     Http::assertNothingSent();
 });

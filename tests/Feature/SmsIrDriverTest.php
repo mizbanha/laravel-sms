@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Facades\Sms;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Facades\Sms;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -90,7 +90,7 @@ it('carries one logical template through two providers that disagree about param
     // Disable it and the same call, unchanged, goes out through the other provider
     // in that provider's own vocabulary.
     $kavenegar->forceFill(['is_enabled' => false])->save();
-    app()->forgetInstance(\Amid\Sms\Gateways\GatewayRegistry::class);
+    app()->forgetInstance(\Mizbanha\Sms\Gateways\GatewayRegistry::class);
 
     $second = Sms::to('09121234567')->template('order-created')->with($variables)->send();
 

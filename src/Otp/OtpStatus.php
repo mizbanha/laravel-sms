@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Otp;
+namespace Mizbanha\Sms\Otp;
 
 /**
  * What happened when an application asked for a one-time code to be sent.

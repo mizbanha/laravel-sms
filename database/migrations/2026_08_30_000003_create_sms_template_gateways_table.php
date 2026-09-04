@@ -1,6 +1,6 @@
 <?php
 
-use Amid\Sms\Support\TableNames;
+use Mizbanha\Sms\Support\TableNames;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Enums\MessageStatus;
-use Amid\Sms\Facades\Sms;
-use Amid\Sms\Jobs\SendSmsMessage;
-use Amid\Sms\Models\SmsGateway;
-use Amid\Sms\Sending\MessageDispatcher;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Enums\MessageStatus;
+use Mizbanha\Sms\Facades\Sms;
+use Mizbanha\Sms\Jobs\SendSmsMessage;
+use Mizbanha\Sms\Models\SmsGateway;
+use Mizbanha\Sms\Sending\MessageDispatcher;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
@@ -140,7 +140,7 @@ it('considers a gateway that was enabled after the previous run', function () {
         'priority' => 200,
     ])->save();
 
-    \Amid\Sms\Models\SmsTemplateGateway::query()->create([
+    \Mizbanha\Sms\Models\SmsTemplateGateway::query()->create([
         'sms_template_id' => $message->sms_template_id,
         'sms_gateway_id' => $second->getKey(),
         'mode' => DeliveryMode::Text,

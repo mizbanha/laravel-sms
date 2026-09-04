@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to `amidesfahani/laravel-sms` are documented here.
+All notable changes to `mizbanha/laravel-sms` are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -11,6 +11,17 @@ First public release candidate. Nothing has been tagged yet.
 
 ### Changed
 
+- ⚠️ **The package is published as `mizbanha/laravel-sms` and its root namespace is `Mizbanha\Sms`.**
+  The pre-release identity `amidesfahani/laravel-sms` / `Amid\Sms` is **superseded** and no longer
+  exists anywhere in the package: there is no `Amid\Sms` class alias, no `amidesfahani/*` Composer
+  name, and no deprecation shim. Nothing was ever tagged under the old identity, so nothing is owed
+  backwards compatibility — an installation that referenced `Amid\Sms\…` must be updated to
+  `Mizbanha\Sms\…`. ⚠️ **Nothing else moved with the vendor name.** The configuration file is still
+  `config/laravel-sms.php` read as `config('laravel-sms.*')`, the publish tags are still
+  `laravel-sms-config` and `laravel-sms-migrations`, the five default tables are still
+  `sms_gateways`, `sms_templates`, `sms_template_gateways`, `sms_messages` and `sms_attempts`, and
+  the driver keys are still `log`, `kavenegar`, `smsir`, `ippanel`, `melipayamak`, `twilio` and
+  `iranpayamak`. A vendor rename is not a reason to break a configuration contract.
 - ⚠️ **The configuration namespace is `laravel-sms`, not `sms`.** The published file is
   `config/laravel-sms.php`, every setting is read as `config('laravel-sms.*')`, and the publish tags are
   `laravel-sms-config` and `laravel-sms-migrations`. `sms` is too generic a key for a package to claim, and
@@ -42,7 +53,7 @@ First public release candidate. Nothing has been tagged yet.
   `config('laravel-sms.tables')` before the first migration, for an application that already owns a table called
   `sms_messages` or `sms_templates`. The defaults are exactly the names this package has always used, so
   an installation that configures nothing is unaffected. Migrations, models, relations, foreign keys,
-  index names and the router's one raw join all resolve through `Amid\Sms\Support\TableNames`; a
+  index names and the router's one raw join all resolve through `Mizbanha\Sms\Support\TableNames`; a
   management layer built on this package inherits the mapping through the models and needs no setting of
   its own. An invalid or duplicated name throws `InvalidTableConfiguration` rather than falling back —
   falling back would point the package at the application's own data. ⚠️ It is a schema mapping decided
@@ -141,4 +152,8 @@ First public release candidate. Nothing has been tagged yet.
   shares. On one that cannot lock, the package logs an error and routes by
   configured priority rather than keeping a per-process counter.
 
-[Unreleased]: https://github.com/amidesfahani/laravel-sms
+<!-- ⚠️ This comparison resolves once v0.1.0 is tagged. Nothing has been tagged yet — see the
+     Unreleased section above, which says so — and no [0.1.0] link definition belongs here until
+     there is a [0.1.0] section to carry it. -->
+
+[Unreleased]: https://github.com/mizbanha/laravel-sms/compare/v0.1.0...HEAD

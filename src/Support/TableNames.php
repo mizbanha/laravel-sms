@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Support;
+namespace Mizbanha\Sms\Support;
 
-use Amid\Sms\Exceptions\InvalidTableConfiguration;
+use Mizbanha\Sms\Exceptions\InvalidTableConfiguration;
 
 /**
  * The names of this package's five tables, and the only place they are decided.

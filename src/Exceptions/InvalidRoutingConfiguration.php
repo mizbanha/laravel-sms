@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Exceptions;
+namespace Mizbanha\Sms\Exceptions;
 
-use Amid\Sms\Enums\RoutingStrategy;
+use Mizbanha\Sms\Enums\RoutingStrategy;
 
 /**
  * Routing configuration that cannot be read.

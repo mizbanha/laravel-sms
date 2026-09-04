@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Enums;
+namespace Mizbanha\Sms\Enums;
 
 /**
  * Why an attempt did not succeed, in provider-neutral terms.

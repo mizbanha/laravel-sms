@@ -29,13 +29,13 @@
 |
 */
 
-use Amid\Sms\Drivers\IpPanelDriver;
-use Amid\Sms\Drivers\IranPayamakDriver;
-use Amid\Sms\Drivers\KavenegarDriver;
-use Amid\Sms\Drivers\LogDriver;
-use Amid\Sms\Drivers\MelipayamakDriver;
-use Amid\Sms\Drivers\SmsIrDriver;
-use Amid\Sms\Drivers\TwilioDriver;
+use Mizbanha\Sms\Drivers\IpPanelDriver;
+use Mizbanha\Sms\Drivers\IranPayamakDriver;
+use Mizbanha\Sms\Drivers\KavenegarDriver;
+use Mizbanha\Sms\Drivers\LogDriver;
+use Mizbanha\Sms\Drivers\MelipayamakDriver;
+use Mizbanha\Sms\Drivers\SmsIrDriver;
+use Mizbanha\Sms\Drivers\TwilioDriver;
 
 return [
 
@@ -95,7 +95,7 @@ return [
     | and quotes, and at most 30 characters. The length is not about table names:
     | Laravel builds INDEX names out of them, MySQL allows 64 for those too, and
     | the longest index here adds 34. An invalid name throws rather than falling
-    | back — see Amid\Sms\Exceptions\InvalidTableConfiguration.
+    | back — see Mizbanha\Sms\Exceptions\InvalidTableConfiguration.
     |
     */
 

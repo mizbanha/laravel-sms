@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Results;
+namespace Mizbanha\Sms\Results;
 
-use Amid\Sms\Enums\DeliveryStatus;
+use Mizbanha\Sms\Enums\DeliveryStatus;
 
 /**
  * What a provider currently says about the fate of one accepted message.

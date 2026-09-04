@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Models;
+namespace Mizbanha\Sms\Models;
 
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Exceptions\InvalidRoutingConfiguration;
-use Amid\Sms\Support\TableNames;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Exceptions\InvalidRoutingConfiguration;
+use Mizbanha\Sms\Support\TableNames;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -24,7 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * A JSON object's key order is not preserved by MySQL, and at a positional
  * provider that order is the difference between a name and an amount. See
- * Amid\Sms\Templates\ParameterMapper.
+ * Mizbanha\Sms\Templates\ParameterMapper.
  *
  * @property list<array{provider?: string|null, variable: string}>|null $parameter_map
  */
@@ -60,7 +60,7 @@ class SmsTemplateGateway extends Model
     /**
      * ⚠️ Resolved on every query rather than declared in `$table`, so a configured
      * name reaches relations, eager loads and queued jobs. See `SmsGateway` for the
-     * full reasoning, and `Amid\Sms\Support\TableNames` for the map.
+     * full reasoning, and `Mizbanha\Sms\Support\TableNames` for the map.
      */
     public function getTable(): string
     {

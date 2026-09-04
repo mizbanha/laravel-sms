@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Enums\CountryPolicy;
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Enums\FailureKind;
-use Amid\Sms\Enums\MessageStatus;
-use Amid\Sms\Exceptions\InvalidCountryCoverage;
-use Amid\Sms\Facades\Sms;
-use Amid\Sms\Models\SmsGateway;
-use Amid\Sms\Models\SmsTemplate;
-use Amid\Sms\Models\SmsTemplateGateway;
+use Mizbanha\Sms\Enums\CountryPolicy;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Enums\FailureKind;
+use Mizbanha\Sms\Enums\MessageStatus;
+use Mizbanha\Sms\Exceptions\InvalidCountryCoverage;
+use Mizbanha\Sms\Facades\Sms;
+use Mizbanha\Sms\Models\SmsGateway;
+use Mizbanha\Sms\Models\SmsTemplate;
+use Mizbanha\Sms\Models\SmsTemplateGateway;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -218,7 +218,7 @@ it('refuses an unusable number before any of this is reached', function () {
     // the caller, still before a row exists.
     $this->configureGateway(driver: 'log');
 
-    expect(fn () => sendTo('nonsense'))->toThrow(\Amid\Sms\Exceptions\InvalidRecipient::class);
+    expect(fn () => sendTo('nonsense'))->toThrow(\Mizbanha\Sms\Exceptions\InvalidRecipient::class);
 });
 
 it('routes on the recorded snapshot rather than re-deriving the country', function () {

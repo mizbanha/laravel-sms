@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Gateways;
+namespace Mizbanha\Sms\Gateways;
 
 /**
  * One message's routing decision: the order to try, and where it was pointed

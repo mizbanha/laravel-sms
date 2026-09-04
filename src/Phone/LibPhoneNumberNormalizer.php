@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Phone;
+namespace Mizbanha\Sms\Phone;
 
-use Amid\Sms\Contracts\PhoneNormalizer;
+use Mizbanha\Sms\Contracts\PhoneNormalizer;
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberFormat;
 use libphonenumber\PhoneNumberType;

@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Contracts\OtpCodeGenerator;
-use Amid\Sms\Contracts\ReportsDeliveryStatus;
-use Amid\Sms\Drivers\IpPanelDriver;
-use Amid\Sms\Enums\Capability;
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Enums\DeliveryStatus;
-use Amid\Sms\Exceptions\DeliveryLookupFailed;
-use Amid\Sms\Facades\Otp;
-use Amid\Sms\Facades\Sms;
-use Amid\Sms\Gateways\GatewayConfig;
-use Amid\Sms\Phone\PhoneNumber;
-use Amid\Sms\Support\TableNames;
+use Mizbanha\Sms\Contracts\OtpCodeGenerator;
+use Mizbanha\Sms\Contracts\ReportsDeliveryStatus;
+use Mizbanha\Sms\Drivers\IpPanelDriver;
+use Mizbanha\Sms\Enums\Capability;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Enums\DeliveryStatus;
+use Mizbanha\Sms\Exceptions\DeliveryLookupFailed;
+use Mizbanha\Sms\Facades\Otp;
+use Mizbanha\Sms\Facades\Sms;
+use Mizbanha\Sms\Gateways\GatewayConfig;
+use Mizbanha\Sms\Phone\PhoneNumber;
+use Mizbanha\Sms\Support\TableNames;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
@@ -250,7 +250,7 @@ it('never brings an OTP back into the database through a delivery report', funct
             return '482193';
         }
     });
-    app()->forgetInstance(\Amid\Sms\Otp\OtpManager::class);
+    app()->forgetInstance(\Mizbanha\Sms\Otp\OtpManager::class);
     Otp::clearResolvedInstances();
 
     test()->configureGateway(

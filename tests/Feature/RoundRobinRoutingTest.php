@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Enums\FailureKind;
-use Amid\Sms\Enums\MessageStatus;
-use Amid\Sms\Enums\RoutingStrategy;
-use Amid\Sms\Enums\SendOutcome;
-use Amid\Sms\Facades\Sms;
-use Amid\Sms\Health\CircuitBreaker;
-use Amid\Sms\Jobs\SendSmsMessage;
-use Amid\Sms\Models\SmsGateway;
-use Amid\Sms\Models\SmsMessage;
-use Amid\Sms\Models\SmsTemplate;
-use Amid\Sms\Models\SmsTemplateGateway;
-use Amid\Sms\Results\SendResult;
-use Amid\Sms\Sending\MessageDispatcher;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Enums\FailureKind;
+use Mizbanha\Sms\Enums\MessageStatus;
+use Mizbanha\Sms\Enums\RoutingStrategy;
+use Mizbanha\Sms\Enums\SendOutcome;
+use Mizbanha\Sms\Facades\Sms;
+use Mizbanha\Sms\Health\CircuitBreaker;
+use Mizbanha\Sms\Jobs\SendSmsMessage;
+use Mizbanha\Sms\Models\SmsGateway;
+use Mizbanha\Sms\Models\SmsMessage;
+use Mizbanha\Sms\Models\SmsTemplate;
+use Mizbanha\Sms\Models\SmsTemplateGateway;
+use Mizbanha\Sms\Results\SendResult;
+use Mizbanha\Sms\Sending\MessageDispatcher;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\SmsServiceProvider;
-use Amid\Sms\Support\TableNames;
-use Amid\Sms\Tests\TestCase;
+use Mizbanha\Sms\SmsServiceProvider;
+use Mizbanha\Sms\Support\TableNames;
+use Mizbanha\Sms\Tests\TestCase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Facades;
+namespace Mizbanha\Sms\Facades;
 
-use Amid\Sms\Otp\OtpManager;
-use Amid\Sms\Otp\OtpResult;
+use Mizbanha\Sms\Otp\OtpManager;
+use Mizbanha\Sms\Otp\OtpResult;
 use Illuminate\Support\Facades\Facade;
 
 /**

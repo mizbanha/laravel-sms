@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Tests;
+namespace Mizbanha\Sms\Tests;
 
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Models\SmsGateway;
-use Amid\Sms\Models\SmsTemplate;
-use Amid\Sms\Models\SmsTemplateGateway;
-use Amid\Sms\SmsServiceProvider;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Models\SmsGateway;
+use Mizbanha\Sms\Models\SmsTemplate;
+use Mizbanha\Sms\Models\SmsTemplateGateway;
+use Mizbanha\Sms\SmsServiceProvider;
 use Illuminate\Foundation\Console\VendorPublishCommand;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchestra\Testbench\TestCase as Orchestra;

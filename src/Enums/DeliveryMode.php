@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Enums;
+namespace Mizbanha\Sms\Enums;
 
 /**
  * How one template is delivered through one gateway.

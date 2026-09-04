@@ -2,28 +2,28 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Sending;
+namespace Mizbanha\Sms\Sending;
 
-use Amid\Sms\Contracts\ReportsDeliveryStatus;
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Enums\DeliveryStatus;
-use Amid\Sms\Enums\FailureKind;
-use Amid\Sms\Enums\MessageStatus;
-use Amid\Sms\Enums\SendOutcome;
-use Amid\Sms\Contracts\PhoneNormalizer;
-use Amid\Sms\Exceptions\GatewayNotConfigured;
-use Amid\Sms\Exceptions\InvalidParameterMap;
-use Amid\Sms\Exceptions\MissingVariables;
-use Amid\Sms\Gateways\GatewayCandidate;
-use Amid\Sms\Gateways\GatewayRouter;
-use Amid\Sms\Gateways\RoutingPlanner;
-use Amid\Sms\Health\CircuitBreaker;
-use Amid\Sms\Models\SmsAttempt;
-use Amid\Sms\Models\SmsMessage;
-use Amid\Sms\Phone\PhoneNumber;
-use Amid\Sms\Results\SendResult;
-use Amid\Sms\Templates\ParameterMapper;
-use Amid\Sms\Templates\TemplateRenderer;
+use Mizbanha\Sms\Contracts\ReportsDeliveryStatus;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Enums\DeliveryStatus;
+use Mizbanha\Sms\Enums\FailureKind;
+use Mizbanha\Sms\Enums\MessageStatus;
+use Mizbanha\Sms\Enums\SendOutcome;
+use Mizbanha\Sms\Contracts\PhoneNormalizer;
+use Mizbanha\Sms\Exceptions\GatewayNotConfigured;
+use Mizbanha\Sms\Exceptions\InvalidParameterMap;
+use Mizbanha\Sms\Exceptions\MissingVariables;
+use Mizbanha\Sms\Gateways\GatewayCandidate;
+use Mizbanha\Sms\Gateways\GatewayRouter;
+use Mizbanha\Sms\Gateways\RoutingPlanner;
+use Mizbanha\Sms\Health\CircuitBreaker;
+use Mizbanha\Sms\Models\SmsAttempt;
+use Mizbanha\Sms\Models\SmsMessage;
+use Mizbanha\Sms\Phone\PhoneNumber;
+use Mizbanha\Sms\Results\SendResult;
+use Mizbanha\Sms\Templates\ParameterMapper;
+use Mizbanha\Sms\Templates\TemplateRenderer;
 use Throwable;
 
 /**

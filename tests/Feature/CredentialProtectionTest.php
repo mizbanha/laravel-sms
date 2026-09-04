@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Gateways\GatewayConfig;
-use Amid\Sms\Models\SmsGateway;
-use Amid\Sms\Support\TableNames;
+use Mizbanha\Sms\Gateways\GatewayConfig;
+use Mizbanha\Sms\Models\SmsGateway;
+use Mizbanha\Sms\Support\TableNames;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -44,7 +44,7 @@ it('names a missing credential without revealing the ones that are present', fun
 
     expect(fn () => $config->requireCredential('password'))
         ->toThrow(
-            \Amid\Sms\Exceptions\GatewayNotConfigured::class,
+            \Mizbanha\Sms\Exceptions\GatewayNotConfigured::class,
             'SMS gateway [primary] is missing the [password] credential.',
         );
 

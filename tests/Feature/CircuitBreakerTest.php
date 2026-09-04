@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Enums\FailureKind;
-use Amid\Sms\Exceptions\SmsException;
-use Amid\Sms\Health\CircuitBreaker;
-use Amid\Sms\Health\CircuitState;
-use Amid\Sms\Models\SmsGateway;
-use Amid\Sms\Results\SendResult;
+use Mizbanha\Sms\Enums\FailureKind;
+use Mizbanha\Sms\Exceptions\SmsException;
+use Mizbanha\Sms\Health\CircuitBreaker;
+use Mizbanha\Sms\Health\CircuitState;
+use Mizbanha\Sms\Models\SmsGateway;
+use Mizbanha\Sms\Results\SendResult;
 use Illuminate\Support\Facades\Cache;
 
 /**

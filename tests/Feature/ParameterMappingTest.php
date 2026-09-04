@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Enums\FailureKind;
-use Amid\Sms\Enums\SendOutcome;
-use Amid\Sms\Facades\Sms;
-use Amid\Sms\Models\SmsTemplateGateway;
-use Amid\Sms\Support\TableNames;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Enums\FailureKind;
+use Mizbanha\Sms\Enums\SendOutcome;
+use Mizbanha\Sms\Facades\Sms;
+use Mizbanha\Sms\Models\SmsTemplateGateway;
+use Mizbanha\Sms\Support\TableNames;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;

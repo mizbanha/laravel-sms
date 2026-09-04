@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Models;
+namespace Mizbanha\Sms\Models;
 
-use Amid\Sms\Enums\RoutingStrategy;
-use Amid\Sms\Exceptions\InvalidRoutingConfiguration;
-use Amid\Sms\Support\TableNames;
-use Amid\Sms\Templates\PlaceholderParser;
+use Mizbanha\Sms\Enums\RoutingStrategy;
+use Mizbanha\Sms\Exceptions\InvalidRoutingConfiguration;
+use Mizbanha\Sms\Support\TableNames;
+use Mizbanha\Sms\Templates\PlaceholderParser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -52,7 +52,7 @@ class SmsTemplate extends Model
     /**
      * ⚠️ Resolved on every query rather than declared in `$table`, so a configured
      * name reaches relations, eager loads and queued jobs. See `SmsGateway` for the
-     * full reasoning, and `Amid\Sms\Support\TableNames` for the map.
+     * full reasoning, and `Mizbanha\Sms\Support\TableNames` for the map.
      */
     public function getTable(): string
     {

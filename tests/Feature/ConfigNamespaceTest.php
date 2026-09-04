@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Enums\Capability;
-use Amid\Sms\Enums\MessageStatus;
-use Amid\Sms\Facades\Sms;
-use Amid\Sms\Gateways\GatewayRegistry;
-use Amid\Sms\Models\SmsAttempt;
-use Amid\Sms\Models\SmsGateway;
-use Amid\Sms\Models\SmsMessage;
-use Amid\Sms\Models\SmsTemplate;
-use Amid\Sms\Models\SmsTemplateGateway;
-use Amid\Sms\Support\TableNames;
+use Mizbanha\Sms\Enums\Capability;
+use Mizbanha\Sms\Enums\MessageStatus;
+use Mizbanha\Sms\Facades\Sms;
+use Mizbanha\Sms\Gateways\GatewayRegistry;
+use Mizbanha\Sms\Models\SmsAttempt;
+use Mizbanha\Sms\Models\SmsGateway;
+use Mizbanha\Sms\Models\SmsMessage;
+use Mizbanha\Sms\Models\SmsTemplate;
+use Mizbanha\Sms\Models\SmsTemplateGateway;
+use Mizbanha\Sms\Support\TableNames;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -97,7 +97,7 @@ it('builds its gateway registry from its own namespace, not the host one', funct
 
     // ...and the host's own driver name is not visible to the package at all.
     expect(fn () => $registry->capabilitiesFor('legacy'))
-        ->toThrow(Amid\Sms\Exceptions\GatewayNotConfigured::class);
+        ->toThrow(Mizbanha\Sms\Exceptions\GatewayNotConfigured::class);
 });
 
 it('resolves every model table from its own namespace', function () {

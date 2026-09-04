@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Tests\Integration;
+namespace Mizbanha\Sms\Tests\Integration;
 
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Enums\FailureKind;
-use Amid\Sms\Enums\SendOutcome;
-use Amid\Sms\Facades\Sms;
-use Amid\Sms\Models\SmsGateway;
-use Amid\Sms\Models\SmsTemplate;
-use Amid\Sms\Models\SmsTemplateGateway;
-use Amid\Sms\Tests\TestCase;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Enums\FailureKind;
+use Mizbanha\Sms\Enums\SendOutcome;
+use Mizbanha\Sms\Facades\Sms;
+use Mizbanha\Sms\Models\SmsGateway;
+use Mizbanha\Sms\Models\SmsTemplate;
+use Mizbanha\Sms\Models\SmsTemplateGateway;
+use Mizbanha\Sms\Tests\TestCase;
 
 /**
  * ⚠️ **The only test in this package that talks to a real provider, and it does

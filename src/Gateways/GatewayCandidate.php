@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Gateways;
+namespace Mizbanha\Sms\Gateways;
 
-use Amid\Sms\Contracts\Driver;
-use Amid\Sms\Models\SmsGateway;
-use Amid\Sms\Models\SmsTemplateGateway;
+use Mizbanha\Sms\Contracts\Driver;
+use Mizbanha\Sms\Models\SmsGateway;
+use Mizbanha\Sms\Models\SmsTemplateGateway;
 
 /**
  * One gateway that could carry one message, with everything needed to try it.

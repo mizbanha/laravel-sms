@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Drivers\TwilioDriver;
-use Amid\Sms\Enums\Capability;
-use Amid\Sms\Enums\DeliveryStatus;
-use Amid\Sms\Exceptions\DeliveryLookupFailed;
-use Amid\Sms\Gateways\GatewayConfig;
-use Amid\Sms\Phone\PhoneNumber;
+use Mizbanha\Sms\Drivers\TwilioDriver;
+use Mizbanha\Sms\Enums\Capability;
+use Mizbanha\Sms\Enums\DeliveryStatus;
+use Mizbanha\Sms\Exceptions\DeliveryLookupFailed;
+use Mizbanha\Sms\Gateways\GatewayConfig;
+use Mizbanha\Sms\Phone\PhoneNumber;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -41,7 +41,7 @@ it('advertises the delivery-report capability it actually implements', function 
     // ⚠️ The capability and the interface must agree. One without the other is a
     // claim rather than a fact, and the router and any management screen believe it.
     expect(twilio()->capabilities())->toContain(Capability::DeliveryReport)
-        ->and(twilio())->toBeInstanceOf(\Amid\Sms\Contracts\ReportsDeliveryStatus::class);
+        ->and(twilio())->toBeInstanceOf(\Mizbanha\Sms\Contracts\ReportsDeliveryStatus::class);
 });
 
 it('fetches the message resource by its SID with basic auth', function () {

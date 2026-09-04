@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Enums\MessageStatus;
-use Amid\Sms\Facades\Sms;
-use Amid\Sms\Jobs\SendSmsMessage;
-use Amid\Sms\Models\SmsMessage;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Enums\MessageStatus;
+use Mizbanha\Sms\Facades\Sms;
+use Mizbanha\Sms\Jobs\SendSmsMessage;
+use Mizbanha\Sms\Models\SmsMessage;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 
@@ -91,7 +91,7 @@ it('does not deliver again when a job runs a second time for a settled message',
 
     // The same job, run again over the same settled message.
     (new SendSmsMessage($message->getKey(), ['customer_name' => 'Amid']))
-        ->handle(app(\Amid\Sms\Sending\MessageDispatcher::class));
+        ->handle(app(\Mizbanha\Sms\Sending\MessageDispatcher::class));
 
     Http::assertSentCount(1);
     expect($message->fresh()->attempts)->toHaveCount(1);
@@ -108,7 +108,7 @@ it('does not deliver again after an uncertain result', function () {
     Http::assertSentCount(1);
 
     (new SendSmsMessage($message->getKey(), ['customer_name' => 'Amid']))
-        ->handle(app(\Amid\Sms\Sending\MessageDispatcher::class));
+        ->handle(app(\Mizbanha\Sms\Sending\MessageDispatcher::class));
 
     Http::assertSentCount(1);
 });
@@ -147,7 +147,7 @@ it('fails the message rather than throwing when no gateway can carry it', functi
     // A runtime configuration state, not a caller error. Sending is a side effect
     // of something more important, and an exception here would roll back the order
     // that the message was merely announcing.
-    \Amid\Sms\Models\SmsGateway::query()->update(['is_enabled' => false]);
+    \Mizbanha\Sms\Models\SmsGateway::query()->update(['is_enabled' => false]);
     Http::fake();
 
     $message = Sms::to('09121234567')->template('order-created')->with(['customer_name' => 'Amid'])->send();
@@ -163,7 +163,7 @@ it('drops a pattern binding that has no registered code rather than sending text
     // A pattern is chosen precisely because free text would not arrive - it is not
     // delivered at night and is withheld from numbers on the national opt-out list.
     // A silent downgrade would look like success and reach a fraction of people.
-    \Amid\Sms\Models\SmsTemplateGateway::query()->update([
+    \Mizbanha\Sms\Models\SmsTemplateGateway::query()->update([
         'mode' => DeliveryMode::Pattern->value,
         'pattern_code' => null,
     ]);
@@ -182,7 +182,7 @@ it('refuses an unusable recipient before recording anything', function () {
     // the canonical destination in a non-null column, so there is no message to
     // record this against.
     expect(fn () => Sms::to('0912123')->template('order-created')->with(['customer_name' => 'Amid'])->send())
-        ->toThrow(\Amid\Sms\Exceptions\InvalidRecipient::class);
+        ->toThrow(\Mizbanha\Sms\Exceptions\InvalidRecipient::class);
 
     expect(SmsMessage::query()->count())->toBe(0);
     Http::assertNothingSent();
@@ -190,5 +190,5 @@ it('refuses an unusable recipient before recording anything', function () {
 
 it('refuses a template key that does not exist', function () {
     expect(fn () => Sms::to('09121234567')->template('no-such-template'))
-        ->toThrow(\Amid\Sms\Exceptions\TemplateNotFound::class);
+        ->toThrow(\Mizbanha\Sms\Exceptions\TemplateNotFound::class);
 });

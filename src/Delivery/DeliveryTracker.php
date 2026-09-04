@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Delivery;
+namespace Mizbanha\Sms\Delivery;
 
-use Amid\Sms\Contracts\PhoneNormalizer;
-use Amid\Sms\Contracts\ReportsDeliveryStatus;
-use Amid\Sms\Exceptions\DeliveryLookupFailed;
-use Amid\Sms\Exceptions\GatewayNotConfigured;
-use Amid\Sms\Gateways\GatewayRegistry;
-use Amid\Sms\Models\SmsAttempt;
-use Amid\Sms\Models\SmsMessage;
-use Amid\Sms\Phone\PhoneNumber;
-use Amid\Sms\Results\DeliveryResult;
+use Mizbanha\Sms\Contracts\PhoneNormalizer;
+use Mizbanha\Sms\Contracts\ReportsDeliveryStatus;
+use Mizbanha\Sms\Exceptions\DeliveryLookupFailed;
+use Mizbanha\Sms\Exceptions\GatewayNotConfigured;
+use Mizbanha\Sms\Gateways\GatewayRegistry;
+use Mizbanha\Sms\Models\SmsAttempt;
+use Mizbanha\Sms\Models\SmsMessage;
+use Mizbanha\Sms\Phone\PhoneNumber;
+use Mizbanha\Sms\Results\DeliveryResult;
 
 /**
  * Asks a provider what became of a message it accepted, and writes down the

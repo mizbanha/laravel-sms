@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Contracts\OtpCodeGenerator;
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Exceptions\SmsException;
-use Amid\Sms\Facades\Otp;
-use Amid\Sms\Models\SmsGateway;
-use Amid\Sms\Models\SmsTemplate;
-use Amid\Sms\Models\SmsTemplateGateway;
-use Amid\Sms\Otp\OtpStatus;
-use Amid\Sms\Otp\RandomOtpCodeGenerator;
-use Amid\Sms\Support\TableNames;
+use Mizbanha\Sms\Contracts\OtpCodeGenerator;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Exceptions\SmsException;
+use Mizbanha\Sms\Facades\Otp;
+use Mizbanha\Sms\Models\SmsGateway;
+use Mizbanha\Sms\Models\SmsTemplate;
+use Mizbanha\Sms\Models\SmsTemplateGateway;
+use Mizbanha\Sms\Otp\OtpStatus;
+use Mizbanha\Sms\Otp\RandomOtpCodeGenerator;
+use Mizbanha\Sms\Support\TableNames;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -45,8 +45,8 @@ function fixedCode(string $code = OTP_CODE): void
 
     // The manager is a singleton and takes the generator by constructor, so a
     // rebind mid-test has to drop the built instance to take effect.
-    app()->forgetInstance(\Amid\Sms\Otp\OtpManager::class);
-    \Amid\Sms\Facades\Otp::clearResolvedInstances();
+    app()->forgetInstance(\Mizbanha\Sms\Otp\OtpManager::class);
+    \Mizbanha\Sms\Facades\Otp::clearResolvedInstances();
 }
 
 /** An OTP template bound to one gateway, not marked sensitive on purpose. */

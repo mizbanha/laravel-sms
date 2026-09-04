@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Otp;
+namespace Mizbanha\Sms\Otp;
 
-use Amid\Sms\Contracts\OtpCodeGenerator;
+use Mizbanha\Sms\Contracts\OtpCodeGenerator;
 
 /**
  * The production generator.

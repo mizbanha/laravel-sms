@@ -1,13 +1,13 @@
 {
-    "name": "amidesfahani/laravel-sms",
+    "name": "mizbanha/laravel-sms",
     "description": "A provider-neutral SMS delivery package for Laravel: runtime-configurable gateways, logical templates, per-gateway parameter mapping, structured delivery results, message and attempt auditing.",
     "type": "library",
     "license": "MIT",
     "keywords": ["laravel", "sms", "otp", "gateway", "failover", "kavenegar", "sms.ir", "ippanel", "melipayamak", "iranpayamak", "twilio"],
-    "homepage": "https://github.com/amidesfahani/laravel-sms",
+    "homepage": "https://mizbanha.com",
     "support": {
-        "issues": "https://github.com/amidesfahani/laravel-sms/issues",
-        "source": "https://github.com/amidesfahani/laravel-sms"
+        "issues": "https://github.com/mizbanha/laravel-sms/issues",
+        "source": "https://github.com/mizbanha/laravel-sms"
     },
     "authors": [
         {
@@ -32,21 +32,21 @@
     },
     "autoload": {
         "psr-4": {
-            "Amid\\Sms\\": "src/"
+            "Mizbanha\\Sms\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Amid\\Sms\\Tests\\": "tests/"
+            "Mizbanha\\Sms\\Tests\\": "tests/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Amid\\Sms\\SmsServiceProvider"
+                "Mizbanha\\Sms\\SmsServiceProvider"
             ],
             "aliases": {
-                "Sms": "Amid\\Sms\\Facades\\Sms"
+                "Sms": "Mizbanha\\Sms\\Facades\\Sms"
             }
         }
     },

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Sending;
+namespace Mizbanha\Sms\Sending;
 
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Phone\PhoneNumber;
-use Amid\Sms\Templates\MappedParameter;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Phone\PhoneNumber;
+use Mizbanha\Sms\Templates\MappedParameter;
 
 /**
  * What a driver is handed: one message, ready to go out.

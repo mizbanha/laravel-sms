@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Enums\MessageStatus;
-use Amid\Sms\Facades\Sms;
-use Amid\Sms\Models\SmsMessage;
-use Amid\Sms\Sending\MessageDispatcher;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Enums\MessageStatus;
+use Mizbanha\Sms\Facades\Sms;
+use Mizbanha\Sms\Models\SmsMessage;
+use Mizbanha\Sms\Sending\MessageDispatcher;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 

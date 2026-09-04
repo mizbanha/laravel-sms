@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Contracts;
+namespace Mizbanha\Sms\Contracts;
 
-use Amid\Sms\Exceptions\DeliveryLookupFailed;
-use Amid\Sms\Phone\PhoneNumber;
-use Amid\Sms\Results\DeliveryResult;
+use Mizbanha\Sms\Exceptions\DeliveryLookupFailed;
+use Mizbanha\Sms\Phone\PhoneNumber;
+use Mizbanha\Sms\Results\DeliveryResult;
 
 /**
  * A driver that can be asked what actually happened to a message it accepted.

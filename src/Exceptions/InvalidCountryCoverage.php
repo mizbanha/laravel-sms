@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Exceptions;
+namespace Mizbanha\Sms\Exceptions;
 
 /**
  * A gateway whose country configuration cannot be read.

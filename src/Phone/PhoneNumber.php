@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Phone;
+namespace Mizbanha\Sms\Phone;
 
 use Stringable;
 

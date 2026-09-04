@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Health;
+namespace Mizbanha\Sms\Health;
 
-use Amid\Sms\Enums\FailureKind;
-use Amid\Sms\Enums\SendOutcome;
-use Amid\Sms\Exceptions\SmsException;
-use Amid\Sms\Models\SmsGateway;
-use Amid\Sms\Results\SendResult;
+use Mizbanha\Sms\Enums\FailureKind;
+use Mizbanha\Sms\Enums\SendOutcome;
+use Mizbanha\Sms\Exceptions\SmsException;
+use Mizbanha\Sms\Models\SmsGateway;
+use Mizbanha\Sms\Results\SendResult;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Cache\LockProvider;
 use Illuminate\Contracts\Cache\Repository;

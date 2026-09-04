@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Gateways;
+namespace Mizbanha\Sms\Gateways;
 
-use Amid\Sms\Enums\RoutingStrategy;
-use Amid\Sms\Health\CircuitBreaker;
-use Amid\Sms\Models\SmsTemplate;
+use Mizbanha\Sms\Enums\RoutingStrategy;
+use Mizbanha\Sms\Health\CircuitBreaker;
+use Mizbanha\Sms\Models\SmsTemplate;
 use Illuminate\Contracts\Cache\LockProvider;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Cache\Repository;

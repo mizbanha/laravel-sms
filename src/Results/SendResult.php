@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Results;
+namespace Mizbanha\Sms\Results;
 
-use Amid\Sms\Enums\FailureKind;
-use Amid\Sms\Enums\SendOutcome;
+use Mizbanha\Sms\Enums\FailureKind;
+use Mizbanha\Sms\Enums\SendOutcome;
 
 /**
  * What one gateway did with one message, in terms the orchestrator can act on.

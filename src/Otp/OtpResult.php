@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Otp;
+namespace Mizbanha\Sms\Otp;
 
-use Amid\Sms\Models\SmsMessage;
+use Mizbanha\Sms\Models\SmsMessage;
 
 /**
  * What an application gets back from asking for a code to be sent.

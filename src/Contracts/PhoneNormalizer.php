@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Contracts;
+namespace Mizbanha\Sms\Contracts;
 
-use Amid\Sms\Phone\PhoneNumber;
+use Mizbanha\Sms\Phone\PhoneNumber;
 
 /**
  * Turns whatever a caller has into one canonical number, or says it cannot.

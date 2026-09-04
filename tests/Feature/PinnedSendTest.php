@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Enums\CountryPolicy;
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Enums\FailureKind;
-use Amid\Sms\Enums\MessageStatus;
-use Amid\Sms\Enums\RoutingStrategy;
-use Amid\Sms\Enums\SendOutcome;
-use Amid\Sms\Exceptions\GatewayNotConfigured;
-use Amid\Sms\Exceptions\SmsException;
-use Amid\Sms\Facades\Sms;
-use Amid\Sms\Health\CircuitBreaker;
-use Amid\Sms\Models\SmsGateway;
-use Amid\Sms\Models\SmsMessage;
-use Amid\Sms\Models\SmsTemplate;
-use Amid\Sms\Models\SmsTemplateGateway;
-use Amid\Sms\Results\SendResult;
+use Mizbanha\Sms\Enums\CountryPolicy;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Enums\FailureKind;
+use Mizbanha\Sms\Enums\MessageStatus;
+use Mizbanha\Sms\Enums\RoutingStrategy;
+use Mizbanha\Sms\Enums\SendOutcome;
+use Mizbanha\Sms\Exceptions\GatewayNotConfigured;
+use Mizbanha\Sms\Exceptions\SmsException;
+use Mizbanha\Sms\Facades\Sms;
+use Mizbanha\Sms\Health\CircuitBreaker;
+use Mizbanha\Sms\Models\SmsGateway;
+use Mizbanha\Sms\Models\SmsMessage;
+use Mizbanha\Sms\Models\SmsTemplate;
+use Mizbanha\Sms\Models\SmsTemplateGateway;
+use Mizbanha\Sms\Results\SendResult;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 

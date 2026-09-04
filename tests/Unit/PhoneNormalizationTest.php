@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Contracts\PhoneNormalizer;
+use Mizbanha\Sms\Contracts\PhoneNormalizer;
 
 /**
  * Normalisation is the package's first line of defence: everything downstream

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Gateways;
+namespace Mizbanha\Sms\Gateways;
 
-use Amid\Sms\Exceptions\GatewayNotConfigured;
-use Amid\Sms\Models\SmsTemplate;
-use Amid\Sms\Support\TableNames;
+use Mizbanha\Sms\Exceptions\GatewayNotConfigured;
+use Mizbanha\Sms\Models\SmsTemplate;
+use Mizbanha\Sms\Support\TableNames;
 use Illuminate\Support\Facades\Log;
 
 /**

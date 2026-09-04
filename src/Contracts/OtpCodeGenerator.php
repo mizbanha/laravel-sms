@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Contracts;
+namespace Mizbanha\Sms\Contracts;
 
 /**
  * Produces the digits of a one-time code.

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Jobs;
+namespace Mizbanha\Sms\Jobs;
 
-use Amid\Sms\Enums\MessageStatus;
-use Amid\Sms\Models\SmsMessage;
-use Amid\Sms\Sending\MessageDispatcher;
+use Mizbanha\Sms\Enums\MessageStatus;
+use Mizbanha\Sms\Models\SmsMessage;
+use Mizbanha\Sms\Sending\MessageDispatcher;
 use Illuminate\Contracts\Queue\ShouldBeEncrypted;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;

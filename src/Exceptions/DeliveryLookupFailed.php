@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Exceptions;
+namespace Mizbanha\Sms\Exceptions;
 
 /**
  * The provider could not be asked what happened to a message, or did not answer

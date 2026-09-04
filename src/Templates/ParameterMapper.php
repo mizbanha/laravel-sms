@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Templates;
+namespace Mizbanha\Sms\Templates;
 
-use Amid\Sms\Exceptions\InvalidParameterMap;
-use Amid\Sms\Exceptions\MissingVariables;
+use Mizbanha\Sms\Exceptions\InvalidParameterMap;
+use Mizbanha\Sms\Exceptions\MissingVariables;
 
 /**
  * Our logical variable names, translated into one provider's parameters, in one

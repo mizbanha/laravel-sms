@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Exceptions\InvalidTableConfiguration;
-use Amid\Sms\Models\SmsAttempt;
-use Amid\Sms\Models\SmsGateway;
-use Amid\Sms\Models\SmsMessage;
-use Amid\Sms\Models\SmsTemplate;
-use Amid\Sms\Models\SmsTemplateGateway;
-use Amid\Sms\Support\TableNames;
-use Amid\Sms\Tests\TestCase;
+use Mizbanha\Sms\Exceptions\InvalidTableConfiguration;
+use Mizbanha\Sms\Models\SmsAttempt;
+use Mizbanha\Sms\Models\SmsGateway;
+use Mizbanha\Sms\Models\SmsMessage;
+use Mizbanha\Sms\Models\SmsTemplate;
+use Mizbanha\Sms\Models\SmsTemplateGateway;
+use Mizbanha\Sms\Support\TableNames;
+use Mizbanha\Sms\Tests\TestCase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -377,6 +377,6 @@ it('checks the whole map when the application boots', function () {
      */
     config()->set('laravel-sms.tables.attempts', config('laravel-sms.tables.gateways'));
 
-    expect(fn () => (new Amid\Sms\SmsServiceProvider(app()))->boot())
+    expect(fn () => (new Mizbanha\Sms\SmsServiceProvider(app()))->boot())
         ->toThrow(InvalidTableConfiguration::class);
 });

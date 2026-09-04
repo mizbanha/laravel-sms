@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Facades\Sms;
-use Amid\Sms\Models\SmsTemplate;
-use Amid\Sms\Support\TableNames;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Facades\Sms;
+use Mizbanha\Sms\Models\SmsTemplate;
+use Mizbanha\Sms\Support\TableNames;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -378,5 +378,5 @@ it('still queues and delivers normally', function () {
     $message = Sms::to('09121234567')->template('order-created')->with(['code' => SECRET])->queue();
 
     expect($message->status->value)->toBe('queued');
-    Queue::assertPushed(\Amid\Sms\Jobs\SendSmsMessage::class);
+    Queue::assertPushed(\Mizbanha\Sms\Jobs\SendSmsMessage::class);
 });

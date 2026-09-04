@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Exceptions;
+namespace Mizbanha\Sms\Exceptions;
 
 /**
  * A gateway that cannot be used at all as it currently stands.

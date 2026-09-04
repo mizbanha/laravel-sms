@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Contracts;
+namespace Mizbanha\Sms\Contracts;
 
-use Amid\Sms\Enums\Capability;
-use Amid\Sms\Results\SendResult;
-use Amid\Sms\Sending\OutboundMessage;
+use Mizbanha\Sms\Enums\Capability;
+use Mizbanha\Sms\Results\SendResult;
+use Mizbanha\Sms\Sending\OutboundMessage;
 
 /**
  * One SMS gateway, behind one shape.

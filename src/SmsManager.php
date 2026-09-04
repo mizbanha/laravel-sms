@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms;
+namespace Mizbanha\Sms;
 
-use Amid\Sms\Contracts\PhoneNormalizer;
-use Amid\Sms\Delivery\DeliveryTracker;
-use Amid\Sms\Models\SmsAttempt;
-use Amid\Sms\Models\SmsMessage;
-use Amid\Sms\Results\DeliveryResult;
-use Amid\Sms\Sending\MessageDispatcher;
-use Amid\Sms\Sending\PendingMessage;
-use Amid\Sms\Templates\TemplateRenderer;
+use Mizbanha\Sms\Contracts\PhoneNormalizer;
+use Mizbanha\Sms\Delivery\DeliveryTracker;
+use Mizbanha\Sms\Models\SmsAttempt;
+use Mizbanha\Sms\Models\SmsMessage;
+use Mizbanha\Sms\Results\DeliveryResult;
+use Mizbanha\Sms\Sending\MessageDispatcher;
+use Mizbanha\Sms\Sending\PendingMessage;
+use Mizbanha\Sms\Templates\TemplateRenderer;
 
 /**
  * The package's front door.

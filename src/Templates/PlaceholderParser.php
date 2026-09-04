@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Templates;
+namespace Mizbanha\Sms\Templates;
 
 /**
  * The placeholder syntax, in one place.

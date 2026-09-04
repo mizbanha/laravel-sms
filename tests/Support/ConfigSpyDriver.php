@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Tests\Support;
+namespace Mizbanha\Sms\Tests\Support;
 
-use Amid\Sms\Contracts\Driver;
-use Amid\Sms\Enums\Capability;
-use Amid\Sms\Gateways\GatewayConfig;
-use Amid\Sms\Results\SendResult;
-use Amid\Sms\Sending\OutboundMessage;
+use Mizbanha\Sms\Contracts\Driver;
+use Mizbanha\Sms\Enums\Capability;
+use Mizbanha\Sms\Gateways\GatewayConfig;
+use Mizbanha\Sms\Results\SendResult;
+use Mizbanha\Sms\Sending\OutboundMessage;
 
 /**
  * A driver that reports WHICH configuration it was built with, and nothing else.

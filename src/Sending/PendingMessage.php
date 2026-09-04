@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Sending;
+namespace Mizbanha\Sms\Sending;
 
-use Amid\Sms\Contracts\PhoneNormalizer;
-use Amid\Sms\Enums\MessageStatus;
-use Amid\Sms\Exceptions\GatewayNotConfigured;
-use Amid\Sms\Exceptions\InvalidRecipient;
-use Amid\Sms\Exceptions\SmsException;
-use Amid\Sms\Exceptions\TemplateNotFound;
-use Amid\Sms\Jobs\SendSmsMessage;
-use Amid\Sms\Models\SmsGateway;
-use Amid\Sms\Models\SmsMessage;
-use Amid\Sms\Models\SmsTemplate;
-use Amid\Sms\Templates\TemplateRenderer;
+use Mizbanha\Sms\Contracts\PhoneNormalizer;
+use Mizbanha\Sms\Enums\MessageStatus;
+use Mizbanha\Sms\Exceptions\GatewayNotConfigured;
+use Mizbanha\Sms\Exceptions\InvalidRecipient;
+use Mizbanha\Sms\Exceptions\SmsException;
+use Mizbanha\Sms\Exceptions\TemplateNotFound;
+use Mizbanha\Sms\Jobs\SendSmsMessage;
+use Mizbanha\Sms\Models\SmsGateway;
+use Mizbanha\Sms\Models\SmsMessage;
+use Mizbanha\Sms\Models\SmsTemplate;
+use Mizbanha\Sms\Templates\TemplateRenderer;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -276,7 +276,7 @@ final class PendingMessage
         $to = $this->normalizer->normalize($this->recipient)
             ?? throw InvalidRecipient::for($this->recipient);
 
-        $template = $this->template ?? throw new \Amid\Sms\Exceptions\SmsException('An SMS needs a template.');
+        $template = $this->template ?? throw new \Mizbanha\Sms\Exceptions\SmsException('An SMS needs a template.');
 
         // Rendered before anything is written, so a wording the caller cannot fill
         // in fails without leaving a row behind.

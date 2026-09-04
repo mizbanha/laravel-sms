@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Gateways;
+namespace Mizbanha\Sms\Gateways;
 
-use Amid\Sms\Contracts\Driver;
-use Amid\Sms\Enums\Capability;
-use Amid\Sms\Exceptions\GatewayNotConfigured;
-use Amid\Sms\Models\SmsGateway;
+use Mizbanha\Sms\Contracts\Driver;
+use Mizbanha\Sms\Enums\Capability;
+use Mizbanha\Sms\Exceptions\GatewayNotConfigured;
+use Mizbanha\Sms\Models\SmsGateway;
 
 /**
  * The one place a Driver is built.

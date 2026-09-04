@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Enums\DeliveryMode;
-use Amid\Sms\Enums\DeliveryStatus;
-use Amid\Sms\Facades\Sms;
-use Amid\Sms\Models\SmsAttempt;
-use Amid\Sms\Models\SmsGateway;
-use Amid\Sms\Models\SmsTemplate;
-use Amid\Sms\Models\SmsTemplateGateway;
-use Amid\Sms\Support\TableNames;
+use Mizbanha\Sms\Enums\DeliveryMode;
+use Mizbanha\Sms\Enums\DeliveryStatus;
+use Mizbanha\Sms\Facades\Sms;
+use Mizbanha\Sms\Models\SmsAttempt;
+use Mizbanha\Sms\Models\SmsGateway;
+use Mizbanha\Sms\Models\SmsTemplate;
+use Mizbanha\Sms\Models\SmsTemplateGateway;
+use Mizbanha\Sms\Support\TableNames;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
@@ -416,7 +416,7 @@ it('picks the earliest accepted attempt when history somehow holds two', functio
         'driver' => 'twilio',
         'sequence' => 2,
         'mode' => DeliveryMode::Text,
-        'outcome' => \Amid\Sms\Enums\SendOutcome::Accepted,
+        'outcome' => \Mizbanha\Sms\Enums\SendOutcome::Accepted,
         'provider_message_id' => 'SMimpossible0002',
     ]);
 

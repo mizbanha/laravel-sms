@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Health;
+namespace Mizbanha\Sms\Health;
 
 use Carbon\CarbonImmutable;
 

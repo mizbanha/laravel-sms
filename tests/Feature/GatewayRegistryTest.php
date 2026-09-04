@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Amid\Sms\Enums\Capability;
-use Amid\Sms\Exceptions\GatewayNotConfigured;
-use Amid\Sms\Gateways\GatewayRegistry;
-use Amid\Sms\Models\SmsGateway;
-use Amid\Sms\Tests\Support\ConfigSpyDriver;
+use Mizbanha\Sms\Enums\Capability;
+use Mizbanha\Sms\Exceptions\GatewayNotConfigured;
+use Mizbanha\Sms\Gateways\GatewayRegistry;
+use Mizbanha\Sms\Models\SmsGateway;
+use Mizbanha\Sms\Tests\Support\ConfigSpyDriver;
 
 /**
  * The registry: the one place a Driver is built.

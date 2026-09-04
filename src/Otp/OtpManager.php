@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Amid\Sms\Otp;
+namespace Mizbanha\Sms\Otp;
 
-use Amid\Sms\Contracts\OtpCodeGenerator;
-use Amid\Sms\Contracts\PhoneNormalizer;
-use Amid\Sms\Enums\MessageStatus;
-use Amid\Sms\Exceptions\InvalidRecipient;
-use Amid\Sms\Exceptions\SmsException;
-use Amid\Sms\SmsManager;
+use Mizbanha\Sms\Contracts\OtpCodeGenerator;
+use Mizbanha\Sms\Contracts\PhoneNormalizer;
+use Mizbanha\Sms\Enums\MessageStatus;
+use Mizbanha\Sms\Exceptions\InvalidRecipient;
+use Mizbanha\Sms\Exceptions\SmsException;
+use Mizbanha\Sms\SmsManager;
 use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
