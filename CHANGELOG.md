@@ -36,6 +36,13 @@ First public release candidate. Nothing has been tagged yet.
 
 ### Added
 
+- **Events**, so observation needs no code inside Core: `AttemptRecorded` (with the attempt's duration,
+  measured with a monotonic clock around the driver call, and the attempt it failed over from),
+  `MessageSettled`, `CircuitStateChanged` (every transition, with a reason) and `DeliveryChecked` (a
+  failed lookup is announced as `null`, never as "not delivered"). ⚠️ **A listener can never change a
+  send**: every event goes through a guarded emitter that logs a throwing listener by exception class and
+  carries on. Purely additive — no schema change, no configuration, and an application with no listeners
+  behaves exactly as before.
 - **`iranpayamak` driver**, against the OpenAPI specification published at `docs.iranpayamak.com`. Text
   (`/ws/v1/sms/simple`) and pattern (`/ws/v1/sms/pattern`), authenticated with an `Api-Key` header.
   Refusals are classified from the validation bag's FIELD NAMES rather than from the Persian sentences

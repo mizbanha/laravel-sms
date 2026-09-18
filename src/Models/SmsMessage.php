@@ -7,6 +7,8 @@ namespace Mizbanha\Sms\Models;
 use Mizbanha\Sms\Enums\DeliveryStatus;
 use Mizbanha\Sms\Enums\MessageStatus;
 use Mizbanha\Sms\Enums\SendOutcome;
+use Mizbanha\Sms\Events\MessageSettled;
+use Mizbanha\Sms\Support\Events;
 use Mizbanha\Sms\Support\TableNames;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -157,6 +159,8 @@ class SmsMessage extends Model
      */
     public function transitionTo(MessageStatus $status, ?string $error = null): void
     {
+        $previous = $this->status;
+
         $this->forceFill([
             'status' => $status,
             'error' => $error === null ? null : mb_substr(trim($error), 0, 500),
@@ -164,5 +168,14 @@ class SmsMessage extends Model
             // one would put it into "sent in the last hour" counts.
             'sent_at' => $status === MessageStatus::Accepted ? ($this->sent_at ?? now()) : $this->sent_at,
         ])->save();
+
+        /*
+         * Announced once, on the move from unsettled to settled, after the row is
+         * written. A settled message written again - there is no such path today,
+         * but a management layer could add one - is not a second settlement.
+         */
+        if ($status->isSettled() && ($previous === null || ! $previous->isSettled())) {
+            Events::emit(new MessageSettled($this, $status, $previous));
+        }
     }
 }

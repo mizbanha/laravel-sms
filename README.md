@@ -615,6 +615,30 @@ $breaker->reset($gateway);    // clears the observation - and nothing else
 `reset()` does not enable a disabled gateway, does not touch priority, credentials or country policy, and
 sends nothing. Configure it under `laravel-sms.circuit_breaker`; set `enabled` to false to switch it off entirely.
 
+## Events
+
+Core announces what it did, for anything that wants to observe it — a metrics exporter, a log shipper,
+[SMS Cloud](https://github.com/mizbanha/sms-cloud-client). Nothing listens by default, and nothing in
+Core depends on a listener existing.
+
+| Event | When | Carries |
+|---|---|---|
+| `Mizbanha\Sms\Events\AttemptRecorded` | right after an `sms_attempts` row is written | the attempt, the message, `durationMs` (monotonic clock around the driver call), and `previous` — the attempt before it **in the same failover walk** (`isFailover()`); a later run of a released job is `isRetry()` |
+| `Mizbanha\Sms\Events\MessageSettled` | once, when a message first becomes accepted, failed, unknown or suppressed | the message, the status, the unsettled state it left (null when recorded already suppressed) |
+| `Mizbanha\Sms\Events\CircuitStateChanged` | on every circuit transition | the gateway, `from`, `to`, a `reason` constant, the failures that opened it, `openUntil` |
+| `Mizbanha\Sms\Events\DeliveryChecked` | after a report endpoint was actually asked | the attempt, the previous verdict, and the result — **null means the lookup failed**, never "not delivered" |
+
+⚠️ **A listener can never change a send.** Every event is dispatched through a guard: a listener that
+throws is logged — the event and the exception *class*, never its message — and the send, the retry
+decision, the circuit and the delivery lookup carry on exactly as they would have with nobody listening.
+
+⚠️ **Listeners run synchronously, inside the send.** A listener that does anything slow — an HTTP call,
+a query per event — is making every message wait for it. Buffer in memory and hand the work off.
+
+⚠️ **The models are your own rows.** They hold the recipient and, for an ordinary message, the wording.
+A listener that forwards anything off the machine chooses what it forwards; `mizbanha/sms-cloud-client`
+forwards only counts, outcomes, failure kinds, driver and gateway keys, and durations.
+
 ## Message states
 
 `queued` → `sending` → `accepted` | `failed` | `unknown`, plus `suppressed` when the master switch is off.

@@ -11,6 +11,8 @@ use Mizbanha\Sms\Enums\FailureKind;
 use Mizbanha\Sms\Enums\MessageStatus;
 use Mizbanha\Sms\Enums\SendOutcome;
 use Mizbanha\Sms\Contracts\PhoneNormalizer;
+use Mizbanha\Sms\Events\AttemptRecorded;
+use Mizbanha\Sms\Support\Events;
 use Mizbanha\Sms\Exceptions\GatewayNotConfigured;
 use Mizbanha\Sms\Exceptions\InvalidParameterMap;
 use Mizbanha\Sms\Exceptions\MissingVariables;
@@ -198,6 +200,10 @@ final class MessageDispatcher
         $retryable = false;
         $attempted = false;
 
+        // The attempt made just before the current one in THIS walk; what makes an
+        // attempt a failover rather than a retry. See AttemptRecorded.
+        $previous = null;
+
         /*
          * The failover chain.
          *
@@ -226,9 +232,26 @@ final class MessageDispatcher
 
             $attempted = true;
 
+            // Monotonic, so a clock adjustment mid-call cannot produce a negative
+            // or absurd duration. Observational only: nothing below reads it.
+            $started = hrtime(true);
+
             $result = $this->deliver($candidate, $message, $variables);
 
-            $this->record($message, $candidate, $result);
+            $durationMs = intdiv(hrtime(true) - $started, 1_000_000);
+
+            $attempt = $this->record($message, $candidate, $result);
+
+            /*
+             * Announced before the breaker records the result and before the
+             * message settles, so a listener sees the attempt ahead of whatever it
+             * caused. ⚠️ Emitted through the guarded emitter: a listener that throws
+             * is logged and ignored, and this loop carries on exactly as it would
+             * have with nobody listening.
+             */
+            Events::emit(new AttemptRecorded($attempt, $message, $durationMs, $previous));
+
+            $previous = $attempt;
 
             /*
              * ⚠️ Health is recorded AFTER the attempt and affects only later
@@ -490,7 +513,7 @@ final class MessageDispatcher
         );
     }
 
-    private function record(SmsMessage $message, GatewayCandidate $candidate, SendResult $result): void
+    private function record(SmsMessage $message, GatewayCandidate $candidate, SendResult $result): SmsAttempt
     {
         $sensitive = (bool) $message->is_sensitive;
 
@@ -551,6 +574,8 @@ final class MessageDispatcher
         if ($attempt->delivery_status !== null) {
             $message->summariseDelivery($attempt);
         }
+
+        return $attempt;
     }
 
 }
