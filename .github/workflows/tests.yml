@@ -11,7 +11,9 @@ name: tests
 
 on:
   push:
-    branches: [main]
+    # Feature branches too: a change to a package this widely embedded should
+    # be proven on the branch, not first discovered on main.
+    branches: [main, "feat/**", "fix/**"]
   pull_request:
 
 permissions:
