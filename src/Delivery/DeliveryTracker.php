@@ -6,6 +6,7 @@ namespace Mizbanha\Sms\Delivery;
 
 use Mizbanha\Sms\Contracts\PhoneNormalizer;
 use Mizbanha\Sms\Contracts\ReportsDeliveryStatus;
+use Mizbanha\Sms\Events\DeliveryChecked;
 use Mizbanha\Sms\Exceptions\DeliveryLookupFailed;
 use Mizbanha\Sms\Exceptions\GatewayNotConfigured;
 use Mizbanha\Sms\Gateways\GatewayRegistry;
@@ -13,6 +14,7 @@ use Mizbanha\Sms\Models\SmsAttempt;
 use Mizbanha\Sms\Models\SmsMessage;
 use Mizbanha\Sms\Phone\PhoneNumber;
 use Mizbanha\Sms\Results\DeliveryResult;
+use Mizbanha\Sms\Support\Events;
 
 /**
  * Asks a provider what became of a message it accepted, and writes down the
@@ -89,10 +91,16 @@ final class DeliveryTracker
         }
 
         $message = $attempt->message;
+        $previous = $attempt->delivery_status;
 
         try {
             $result = $driver->deliveryStatus($providerMessageId, $this->recipient($message));
         } catch (DeliveryLookupFailed|GatewayNotConfigured $exception) {
+            // A lookup was made and learned nothing. Announced as such - null, not
+            // a verdict - so an observer can count failed lookups without ever
+            // confusing one with an undelivered message.
+            Events::emit(new DeliveryChecked($attempt, $previous, null));
+
             /*
              * ⚠️ The single most important line in this class.
              *
@@ -139,6 +147,8 @@ final class DeliveryTracker
         if ($message !== null && $message->acceptedAttempt()?->is($attempt) === true) {
             $message->summariseDelivery($attempt->refresh());
         }
+
+        Events::emit(new DeliveryChecked($attempt, $previous, $result));
 
         return $result;
     }

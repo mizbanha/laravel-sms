@@ -6,6 +6,7 @@ namespace Mizbanha\Sms\Sending;
 
 use Mizbanha\Sms\Contracts\PhoneNormalizer;
 use Mizbanha\Sms\Enums\MessageStatus;
+use Mizbanha\Sms\Events\MessageSettled;
 use Mizbanha\Sms\Exceptions\GatewayNotConfigured;
 use Mizbanha\Sms\Exceptions\InvalidRecipient;
 use Mizbanha\Sms\Exceptions\SmsException;
@@ -14,6 +15,7 @@ use Mizbanha\Sms\Jobs\SendSmsMessage;
 use Mizbanha\Sms\Models\SmsGateway;
 use Mizbanha\Sms\Models\SmsMessage;
 use Mizbanha\Sms\Models\SmsTemplate;
+use Mizbanha\Sms\Support\Events;
 use Mizbanha\Sms\Templates\TemplateRenderer;
 use Illuminate\Database\Eloquent\Model;
 
@@ -312,6 +314,11 @@ final class PendingMessage
             'reference_type' => $this->reference?->getMorphClass(),
             'reference_id' => $this->reference?->getKey(),
         ])->save();
+
+        if ($message->isSettled()) {
+            // Suppressed by the master switch: recorded, and already final.
+            Events::emit(new MessageSettled($message, $message->status));
+        }
 
         return $message;
     }

@@ -7,7 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-First public release candidate. Nothing has been tagged yet.
+Nothing yet.
+
+## [0.1.1] - 2026-09-23
+
+An observability release. It adds four events and the duration measured around
+each driver call, and changes nothing about how a message is routed, sent,
+retried, recorded or reported. There is no schema change, no new configuration
+and no new dependency, so an application that upgrades and registers no listener
+behaves exactly as it did on 0.1.0.
+
+### Added
+
+- **Events**, so observation needs no code inside Core: `AttemptRecorded` (with the attempt's duration,
+  measured with a monotonic clock around the driver call, and the attempt it failed over from),
+  `MessageSettled`, `CircuitStateChanged` (every transition, with a reason) and `DeliveryChecked` (a
+  failed lookup is announced as `null`, never as "not delivered"). ⚠️ **A listener can never change a
+  send**: every event goes through a guarded emitter that logs a throwing listener by exception class and
+  carries on. Purely additive — no schema change, no configuration, and an application with no listeners
+  behaves exactly as before.
+
+## [0.1.0] - 2026-09-04
+
+First public release.
 
 ### Changed
 
@@ -152,8 +174,6 @@ First public release candidate. Nothing has been tagged yet.
   shares. On one that cannot lock, the package logs an error and routes by
   configured priority rather than keeping a per-process counter.
 
-<!-- ⚠️ This comparison resolves once v0.1.0 is tagged. Nothing has been tagged yet — see the
-     Unreleased section above, which says so — and no [0.1.0] link definition belongs here until
-     there is a [0.1.0] section to carry it. -->
-
-[Unreleased]: https://github.com/mizbanha/laravel-sms/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/mizbanha/laravel-sms/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/mizbanha/laravel-sms/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/mizbanha/laravel-sms/releases/tag/v0.1.0

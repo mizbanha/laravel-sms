@@ -6,9 +6,11 @@ namespace Mizbanha\Sms\Health;
 
 use Mizbanha\Sms\Enums\FailureKind;
 use Mizbanha\Sms\Enums\SendOutcome;
+use Mizbanha\Sms\Events\CircuitStateChanged;
 use Mizbanha\Sms\Exceptions\SmsException;
 use Mizbanha\Sms\Models\SmsGateway;
 use Mizbanha\Sms\Results\SendResult;
+use Mizbanha\Sms\Support\Events;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Cache\LockProvider;
 use Illuminate\Contracts\Cache\Repository;
@@ -144,6 +146,10 @@ final class CircuitBreaker
              */
             $this->close($gateway);
 
+            if ($probing) {
+                $this->announce($gateway, CircuitState::HalfOpen, CircuitState::Closed, CircuitStateChanged::REASON_PROBE_SUCCEEDED);
+            }
+
             return;
         }
 
@@ -171,7 +177,9 @@ final class CircuitBreaker
             // The one careful try failed the same way. Straight back to open for
             // another cooldown - waiting for the threshold again would mean
             // hammering a provider that has just told us twice.
-            $this->open($gateway);
+            $until = $this->open($gateway);
+
+            $this->announce($gateway, CircuitState::HalfOpen, CircuitState::Open, CircuitStateChanged::REASON_PROBE_FAILED, 1, $until);
 
             return;
         }
@@ -220,7 +228,13 @@ final class CircuitBreaker
             return;
         }
 
+        $before = $this->status($gateway)->state;
+
         $this->close($gateway);
+
+        if ($before !== CircuitState::Closed) {
+            $this->announce($gateway, $before, CircuitState::Closed, CircuitStateChanged::REASON_RESET);
+        }
     }
 
     /**
@@ -270,7 +284,9 @@ final class CircuitBreaker
         $record['count'] = (int) $record['count'] + 1;
 
         if ($record['count'] >= $this->threshold()) {
-            $this->open($gateway);
+            $until = $this->open($gateway);
+
+            $this->announce($gateway, CircuitState::Closed, CircuitState::Open, CircuitStateChanged::REASON_FAILURE_THRESHOLD, (int) $record['count'], $until);
 
             return;
         }
@@ -278,9 +294,13 @@ final class CircuitBreaker
         $this->store()->put($this->key($gateway, 'failures'), $record, $window);
     }
 
-    private function open(SmsGateway $gateway): void
+    /**
+     * @return CarbonImmutable  when the cooldown ends
+     */
+    private function open(SmsGateway $gateway): CarbonImmutable
     {
         $cooldown = $this->cooldown();
+        $until = now()->getTimestamp() + $cooldown;
 
         /*
          * The record outlives the cooldown on purpose. Once `open_until` has
@@ -294,12 +314,14 @@ final class CircuitBreaker
          */
         $this->store()->put(
             $this->key($gateway, 'open'),
-            now()->getTimestamp() + $cooldown,
+            $until,
             $cooldown * 2 + $this->probeTtl(),
         );
 
         $this->store()->forget($this->key($gateway, 'failures'));
         $this->store()->forget($this->key($gateway, 'probe'));
+
+        return CarbonImmutable::createFromTimestamp($until);
     }
 
     private function close(SmsGateway $gateway): void
@@ -332,7 +354,27 @@ final class CircuitBreaker
 
         $this->probes[$this->identity($gateway)] = true;
 
+        $this->announce($gateway, CircuitState::Open, CircuitState::HalfOpen, CircuitStateChanged::REASON_COOLDOWN_ELAPSED);
+
         return true;
+    }
+
+    /**
+     * Tell whoever listens that this circuit moved.
+     *
+     * ⚠️ After the store has been written, never before: a listener that reads
+     * `status()` must see the state the event names. Through the guarded emitter,
+     * so a listener cannot turn a health observation into a failed send.
+     */
+    private function announce(
+        SmsGateway $gateway,
+        CircuitState $from,
+        CircuitState $to,
+        string $reason,
+        int $failures = 0,
+        ?CarbonImmutable $openUntil = null,
+    ): void {
+        Events::emit(new CircuitStateChanged($gateway, $from, $to, $reason, $failures, $openUntil));
     }
 
     /**
